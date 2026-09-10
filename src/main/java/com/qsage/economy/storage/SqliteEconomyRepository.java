@@ -126,6 +126,37 @@ public final class SqliteEconomyRepository
         }
     }
 
+    @Override
+    public long calculateWalletSupply() {
+
+        String sql = """
+            SELECT COALESCE(
+                SUM(available + locked),
+                0
+            )
+            FROM wallets
+            """;
+
+        try (PreparedStatement statement =
+                     database.connection()
+                             .prepareStatement(sql);
+             ResultSet result =
+                     statement.executeQuery()) {
+
+            if (!result.next()) {
+                return 0;
+            }
+
+            return result.getLong(1);
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Failed to calculate wallet supply",
+                    e
+            );
+        }
+    }
+
     // =========================================================
     // TRANSACTION
     // =========================================================

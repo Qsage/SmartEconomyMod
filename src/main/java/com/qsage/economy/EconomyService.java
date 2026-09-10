@@ -3,21 +3,39 @@ package com.qsage.economy;
 import com.qsage.economy.money.MoneySink;
 import com.qsage.economy.money.MoneySource;
 import com.qsage.economy.storage.EconomyRepository;
-import com.qsage.economy.storage.EconomyTransaction;
 import com.qsage.economy.transaction.Transaction;
 import com.qsage.economy.transaction.TransactionType;
 import com.qsage.economy.wallet.Wallet;
 
 import java.time.Instant;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 public final class EconomyService {
 
     private final EconomyRepository repository;
+    private final Consumer<UUID> balanceChangeListener;
 
-    public EconomyService(EconomyRepository repository) {
+    public EconomyService(
+            EconomyRepository repository,
+            Consumer<UUID> balanceChangeListener
+    ) {
         this.repository = repository;
+        this.balanceChangeListener = balanceChangeListener;
     }
+
+    // =========================================================
+    // HELPER
+    // =========================================================
+
+    private void notifyBalanceChanged(
+            UUID playerId
+    ) {
+        balanceChangeListener.accept(
+                playerId
+        );
+    }
+
 
     // =========================================================
     // READ
@@ -71,17 +89,12 @@ public final class EconomyService {
             Wallet wallet =
                     tx.getWallet(playerId);
 
-            Wallet updated =
-                    wallet.deposit(amount);
-
             tx.saveWallet(
                     playerId,
-                    updated
+                    wallet.deposit(amount)
             );
 
-            tx.addMoneyCreated(
-                    amount
-            );
+            tx.addMoneyCreated(amount);
 
             tx.saveTransaction(
                     new Transaction(
@@ -95,6 +108,8 @@ public final class EconomyService {
                     )
             );
         });
+
+        notifyBalanceChanged(playerId);
     }
 
     // =========================================================
@@ -138,6 +153,8 @@ public final class EconomyService {
                     )
             );
         });
+
+        notifyBalanceChanged(playerId);
     }
 
     // =========================================================
@@ -194,6 +211,9 @@ public final class EconomyService {
                     )
             );
         });
+
+        notifyBalanceChanged(from);
+        notifyBalanceChanged(to);
     }
 
     // =========================================================
@@ -229,6 +249,8 @@ public final class EconomyService {
                     )
             );
         });
+
+        notifyBalanceChanged(playerId);
     }
 
     // =========================================================
@@ -264,6 +286,7 @@ public final class EconomyService {
                     )
             );
         });
+        notifyBalanceChanged(playerId);
     }
 
     // =========================================================
@@ -304,8 +327,55 @@ public final class EconomyService {
                     )
             );
         });
+        notifyBalanceChanged(playerId);
     }
 
+    public long calculateWalletSupply() {
+       return repository.calculateWalletSupply();
+    }
+
+    public boolean isConsistent(){
+        long walletSupply = calculateWalletSupply();
+
+        long moneySupply = getMoneySupply();
+
+        return walletSupply == moneySupply;
+    }
+
+    public String getIntegrityReport() {
+
+        long walletSupply =
+                calculateWalletSupply();
+
+        long created =
+                getMoneyCreated();
+
+        long destroyed =
+                getMoneyDestroyed();
+
+        long moneySupply =
+                Math.subtractExact(
+                        created,
+                        destroyed
+                );
+
+        long difference =
+                Math.subtractExact(
+                        walletSupply,
+                        moneySupply
+                );
+
+        return "=== Economy Integrity ===\n"
+                + "Wallet supply: " + walletSupply + "\n"
+                + "Created: " + created + "\n"
+                + "Destroyed: " + destroyed + "\n"
+                + "Supply: " + moneySupply + "\n"
+                + "Difference: " + difference + "\n"
+                + "Status: "
+                + (difference == 0
+                ? "OK"
+                : "CORRUPTED");
+    }
     // =========================================================
 
     private static void validateAmount(long amount) {

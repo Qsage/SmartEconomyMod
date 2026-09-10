@@ -14,9 +14,7 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
-
 import net.minecraft.network.chat.Component;
-
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.permissions.Permissions;
 
@@ -26,13 +24,13 @@ public final class EconomyCommands {
     }
 
     public static void register() {
-
         CommandRegistrationCallback.EVENT.register(
                 (dispatcher, registryAccess, environment) -> {
 
                     registerBalance(dispatcher);
                     registerPay(dispatcher);
                     registerEconomy(dispatcher);
+
                 }
         );
     }
@@ -62,7 +60,8 @@ public final class EconomyCommands {
     ) throws CommandSyntaxException {
 
         ServerPlayer player =
-                context.getSource().getPlayerOrException();
+                context.getSource()
+                        .getPlayerOrException();
 
         long available =
                 SmartEconomy.economy()
@@ -150,7 +149,7 @@ public final class EconomyCommands {
             sender.sendSystemMessage(
                     Component.literal(
                             "You sent "
-                                    + amount
+                                    + formatMoney(amount)
                                     + " to "
                                     + target.getGameProfile().name()
                     )
@@ -159,7 +158,7 @@ public final class EconomyCommands {
             target.sendSystemMessage(
                     Component.literal(
                             "You received "
-                                    + amount
+                                    + formatMoney(amount)
                                     + " from "
                                     + sender.getGameProfile().name()
                     )
@@ -191,10 +190,16 @@ public final class EconomyCommands {
                 Commands.literal("economy")
                         .requires(
                                 source ->
-                                        source.permissions().hasPermission(Permissions.COMMANDS_OWNER)
+                                        source.permissions()
+                                                .hasPermission(
+                                                        Permissions.COMMANDS_OWNER
+                                                )
                         )
 
+                        // -------------------------------------------------
                         // /economy info
+                        // -------------------------------------------------
+
                         .then(
                                 Commands.literal("info")
                                         .executes(
@@ -202,7 +207,21 @@ public final class EconomyCommands {
                                         )
                         )
 
+                        // -------------------------------------------------
+                        // /economy integrity
+                        // -------------------------------------------------
+
+                        .then(
+                                Commands.literal("integrity")
+                                        .executes(
+                                                EconomyCommands::integrity
+                                        )
+                        )
+
+                        // -------------------------------------------------
                         // /economy give <player> <amount>
+                        // -------------------------------------------------
+
                         .then(
                                 Commands.literal("give")
                                         .then(
@@ -222,7 +241,10 @@ public final class EconomyCommands {
                                         )
                         )
 
+                        // -------------------------------------------------
                         // /economy take <player> <amount>
+                        // -------------------------------------------------
+
                         .then(
                                 Commands.literal("take")
                                         .then(
@@ -242,7 +264,10 @@ public final class EconomyCommands {
                                         )
                         )
 
+                        // -------------------------------------------------
                         // /economy player <player>
+                        // -------------------------------------------------
+
                         .then(
                                 Commands.literal("player")
                                         .then(
@@ -288,7 +313,7 @@ public final class EconomyCommands {
         context.getSource().sendSuccess(
                 () -> Component.literal(
                         "Added "
-                                + amount
+                                + formatMoney(amount)
                                 + " to "
                                 + target.getGameProfile().name()
                 ),
@@ -298,7 +323,7 @@ public final class EconomyCommands {
         target.sendSystemMessage(
                 Component.literal(
                         "You received "
-                                + amount
+                                + formatMoney(amount)
                                 + " coins."
                 )
         );
@@ -338,7 +363,7 @@ public final class EconomyCommands {
             context.getSource().sendSuccess(
                     () -> Component.literal(
                             "Removed "
-                                    + amount
+                                    + formatMoney(amount)
                                     + " from "
                                     + target.getGameProfile().name()
                     ),
@@ -347,7 +372,7 @@ public final class EconomyCommands {
 
             target.sendSystemMessage(
                     Component.literal(
-                            amount
+                            formatMoney(amount)
                                     + " coins were removed from your balance."
                     )
             );
@@ -389,14 +414,83 @@ public final class EconomyCommands {
         context.getSource().sendSuccess(
                 () -> Component.literal(
                         "=== Smart Economy ===\n"
-                                + "Created: " + created + "\n"
-                                + "Destroyed: " + destroyed + "\n"
-                                + "Supply: " + supply
+                                + "Created: "
+                                + formatMoney(created)
+                                + "\n"
+                                + "Destroyed: "
+                                + formatMoney(destroyed)
+                                + "\n"
+                                + "Supply: "
+                                + formatMoney(supply)
                 ),
                 false
         );
 
         return 1;
+    }
+
+    // =========================================================
+    // /economy integrity
+    // =========================================================
+
+    private static int integrity(
+            CommandContext<CommandSourceStack> context
+    ) {
+
+        long walletSupply =
+                SmartEconomy.economy()
+                        .calculateWalletSupply();
+
+        long moneyCreated =
+                SmartEconomy.economy()
+                        .getMoneyCreated();
+
+        long moneyDestroyed =
+                SmartEconomy.economy()
+                        .getMoneyDestroyed();
+
+        long moneySupply =
+                Math.subtractExact(
+                        moneyCreated,
+                        moneyDestroyed
+                );
+
+        long difference =
+                Math.subtractExact(
+                        walletSupply,
+                        moneySupply
+                );
+
+        boolean valid =
+                difference == 0;
+
+        context.getSource().sendSuccess(
+                () -> Component.literal(
+                        "=== Economy Integrity ===\n"
+                                + "Wallet supply: "
+                                + formatMoney(walletSupply)
+                                + "\n"
+                                + "Created: "
+                                + formatMoney(moneyCreated)
+                                + "\n"
+                                + "Destroyed: "
+                                + formatMoney(moneyDestroyed)
+                                + "\n"
+                                + "Supply: "
+                                + formatMoney(moneySupply)
+                                + "\n"
+                                + "Difference: "
+                                + formatMoneySigned(difference)
+                                + "\n"
+                                + "Status: "
+                                + (valid
+                                ? "OK"
+                                : "CORRUPTED")
+                ),
+                false
+        );
+
+        return valid ? 1 : 0;
     }
 
     // =========================================================
@@ -415,29 +509,62 @@ public final class EconomyCommands {
 
         long available =
                 SmartEconomy.economy()
-                        .getAvailable(target.getUUID());
+                        .getAvailable(
+                                target.getUUID()
+                        );
 
         long locked =
                 SmartEconomy.economy()
-                        .getLocked(target.getUUID());
+                        .getLocked(
+                                target.getUUID()
+                        );
 
         long total =
                 SmartEconomy.economy()
-                        .getTotal(target.getUUID());
+                        .getTotal(
+                                target.getUUID()
+                        );
 
         context.getSource().sendSuccess(
                 () -> Component.literal(
-                        target.getGameProfile().name()
+                        "=== Player Economy ===\n"
+                                + "Player: "
+                                + target.getGameProfile().name()
                                 + "\n"
-                                + "Available: " + available
+                                + "Available: "
+                                + formatMoney(available)
                                 + "\n"
-                                + "Locked: " + locked
+                                + "Locked: "
+                                + formatMoney(locked)
                                 + "\n"
-                                + "Total: " + total
+                                + "Total: "
+                                + formatMoney(total)
                 ),
                 false
         );
 
         return 1;
+    }
+
+    // =========================================================
+    // FORMAT
+    // =========================================================
+
+    private static String formatMoney(long amount) {
+        return String.format(
+                "%,d",
+                amount
+        );
+    }
+
+    private static String formatMoneySigned(
+            long amount
+    ) {
+        if (amount > 0) {
+            return "+"
+                    + formatMoney(amount);
+        }
+
+        return formatMoney(amount);
     }
 }

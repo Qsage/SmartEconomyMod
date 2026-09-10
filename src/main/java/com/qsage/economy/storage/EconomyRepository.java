@@ -13,6 +13,8 @@ public interface EconomyRepository {
 
     long getMoneyDestroyed();
 
+    long calculateWalletSupply();
+
     void transaction(
             Consumer<EconomyTransaction> action
     );

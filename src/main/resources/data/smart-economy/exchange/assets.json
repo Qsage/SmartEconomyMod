@@ -1,0 +1,19 @@
+{
+  "assets": [
+    {
+      "item": "minecraft:gold_ingot",
+      "base_price": 100,
+      "value": 1.25
+    },
+    {
+      "item": "minecraft:iron_ingot",
+      "base_price": 50,
+      "value": 1.0
+    },
+    {
+      "item": "minecraft:diamond",
+      "base_price": 500,
+      "value": 1.5
+    }
+  ]
+}
