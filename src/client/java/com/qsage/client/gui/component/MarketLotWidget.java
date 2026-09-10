@@ -25,6 +25,7 @@ public class MarketLotWidget extends GuiComponent {
     private final long stock;
     private final Trend trend;
     private final TextureRegion background;
+    private final Runnable onClick;
 
     public MarketLotWidget(
             ItemStack item,
@@ -32,7 +33,8 @@ public class MarketLotWidget extends GuiComponent {
             long price,
             long stock,
             Trend trend,
-            TextureRegion background
+            TextureRegion background,
+            Runnable onClick
     ) {
         super(0, 0);
 
@@ -42,7 +44,9 @@ public class MarketLotWidget extends GuiComponent {
         this.stock = stock;
         this.trend = trend;
         this.background = background;
+        this.onClick = onClick;
     }
+
 
     @Override
     public int getWidth() {
@@ -218,6 +222,23 @@ public class MarketLotWidget extends GuiComponent {
 
 
     }
+
+    public boolean mouseClicked(
+            double mouseX,
+            double mouseY,
+            int button
+    ) {
+        if (button == 0 && contains(mouseX, mouseY)) {
+            if (onClick != null) {
+                onClick.run();
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
     private boolean isTrendHovered(
             double mouseX,
             double mouseY

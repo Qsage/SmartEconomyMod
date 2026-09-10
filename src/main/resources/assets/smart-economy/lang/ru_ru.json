@@ -10,5 +10,8 @@
 
   "gui.smart_economy.wallet.balance": "%s",
   "gui.smart_economy.wallet.locked": "Зарезервировано: %s",
-  "gui.smart_economy.common.close": "Закрыть"
+  "gui.smart_economy.common.close": "Закрыть",
+  "gui.smart_economy.market.sell": "Продать",
+  "gui.smart_economy.market.buy": "Купить",
+  "gui.smart_economy.market.amount": "Количество"
 }

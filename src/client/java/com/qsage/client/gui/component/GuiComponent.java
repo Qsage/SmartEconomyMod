@@ -7,10 +7,7 @@ public abstract class GuiComponent {
     private int x;
     private int y;
 
-    protected GuiComponent(
-            int x,
-            int y
-    ) {
+    protected GuiComponent(int x, int y) {
         this.x = x;
         this.y = y;
     }
@@ -23,10 +20,7 @@ public abstract class GuiComponent {
         return y;
     }
 
-    public void setPosition(
-            int x,
-            int y
-    ) {
+    public void setPosition(int x, int y) {
         this.x = x;
         this.y = y;
     }
@@ -45,7 +39,13 @@ public abstract class GuiComponent {
                 && mouseY < y + getHeight();
     }
 
-
+    public boolean mouseClicked(
+            double mouseX,
+            double mouseY,
+            int button
+    ) {
+        return false;
+    }
 
     public abstract void render(
             GuiGraphicsExtractor graphics,

@@ -10,6 +10,9 @@
 
   "gui.smart_economy.wallet.balance": "%s",
   "gui.smart_economy.wallet.locked": "Locked: %s",
-  "gui.smart_economy.common.close": "Close"
+  "gui.smart_economy.common.close": "Close",
+  "gui.smart_economy.market.sell": "Sell",
+  "gui.smart_economy.market.buy": "Buy",
+  "gui.smart_economy.market.amount": "Amount"
 
 }

@@ -1,6 +1,5 @@
 package com.qsage.economy.market;
 
-import com.qsage.economy.market.model.ExchangeAsset;
 import com.qsage.economy.market.model.ExchangeQuote;
 import com.qsage.economy.market.model.ExchangeTrade;
 import com.qsage.economy.market.model.TradeVolume;
@@ -11,13 +10,11 @@ import java.util.List;
 
 public interface ExchangeRepository {
 
-    ExchangeAsset getAsset(Identifier itemId);
-
-    List<ExchangeAsset> getAssets();
-
-    void saveAsset(ExchangeAsset asset);
-
-
+    /*
+     * ============================================================
+     *  Current quotes
+     * ============================================================
+     */
 
     ExchangeQuote getQuote(Identifier itemId);
 
@@ -25,6 +22,12 @@ public interface ExchangeRepository {
 
     void saveQuote(ExchangeQuote quote);
 
+
+    /*
+     * ============================================================
+     *  Trade history
+     * ============================================================
+     */
 
     void saveTrade(ExchangeTrade trade);
 

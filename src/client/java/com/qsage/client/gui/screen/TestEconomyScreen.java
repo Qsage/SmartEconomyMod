@@ -6,6 +6,7 @@ import com.qsage.client.gui.component.BalanceWidget;
 import com.qsage.client.gui.component.MarketLotWidget;
 import com.qsage.client.gui.component.TabButton;
 import com.qsage.economy.market.network.ExchangeQuotePayload;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -143,7 +144,13 @@ public class TestEconomyScreen extends EconomyScreen {
                     quote.buyPrice(),
                     quote.availableQuantity(),
                     MarketLotWidget.Trend.NEUTRAL,
-                    GuiStyle.MARKET_LOT
+                    GuiStyle.MARKET_LOT,
+                    () -> Minecraft.getInstance().gui.setScreen(
+                            new MarketTradeScreen(
+                                    this,
+                                    stack
+                            )
+                    )
             );
 
             addGuiComponent(

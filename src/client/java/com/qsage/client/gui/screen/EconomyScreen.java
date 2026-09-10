@@ -2,11 +2,12 @@ package com.qsage.client.gui.screen;
 
 import com.qsage.client.gui.GuiAtlas;
 import com.qsage.client.gui.GuiStyle;
-import com.qsage.client.gui.component.GuiComponent;
 
+import com.qsage.client.gui.component.GuiComponent;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
@@ -149,6 +150,28 @@ public abstract class EconomyScreen extends Screen {
                     delta
             );
         }
+    }
+
+    @Override
+    public boolean mouseClicked(
+            MouseButtonEvent event,
+            boolean doubleClick
+    ) {
+        for (GuiComponent component : components) {
+
+            if (component.mouseClicked(
+                    event.x(),
+                    event.y(),
+                    event.button()
+            )) {
+                return true;
+            }
+        }
+
+        return super.mouseClicked(
+                event,
+                doubleClick
+        );
     }
 
     // =========================================================
