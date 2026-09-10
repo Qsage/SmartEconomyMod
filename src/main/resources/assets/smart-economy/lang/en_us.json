@@ -1,0 +1,15 @@
+{
+  "key.category.smart_economy.test_gui": "Smart Economy",
+  "key.smart_economy.open_test_gui": "Open test market",
+
+  "gui.smart_economy.market.title": "Market",
+  "gui.smart_economy.market.search": "Search...",
+  "gui.smart_economy.market.price": "$%s",
+  "gui.smart_economy.market.stock": "%s",
+  "gui.smart_economy.market.quantity": "%s pcs.",
+
+  "gui.smart_economy.wallet.balance": "%s",
+  "gui.smart_economy.wallet.locked": "Locked: %s",
+  "gui.smart_economy.common.close": "Close"
+
+}

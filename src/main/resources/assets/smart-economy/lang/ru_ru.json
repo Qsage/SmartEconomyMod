@@ -1,0 +1,14 @@
+{
+  "key.category.smart_economy.test_gui": "Smart Economy",
+  "key.smart_economy.open_test_gui": "Открыть тестовую биржу",
+
+  "gui.smart_economy.market.title": "Биржа",
+  "gui.smart_economy.market.search": "Поиск...",
+  "gui.smart_economy.market.price": "$%s",
+  "gui.smart_economy.market.stock": "%s",
+  "gui.smart_economy.market.quantity": "%s шт.",
+
+  "gui.smart_economy.wallet.balance": "%s",
+  "gui.smart_economy.wallet.locked": "Зарезервировано: %s",
+  "gui.smart_economy.common.close": "Закрыть"
+}
