@@ -19,7 +19,7 @@ public abstract class EconomyScreen extends Screen {
      * Логический размер нашего GUI.
      */
     protected static final int GUI_WIDTH = 320;
-    protected static final int GUI_HEIGHT = 220;
+    protected static final int GUI_HEIGHT = 180;
 
     private final List<GuiComponent> components =
             new ArrayList<>();
@@ -33,6 +33,25 @@ public abstract class EconomyScreen extends Screen {
     // =========================================================
     // INIT
     // =========================================================
+
+    @Override
+    public boolean isPauseScreen() {
+        return false;
+    }
+
+    protected void removeGuiComponent(GuiComponent component) {
+        components.remove(component);
+    }
+
+    protected void clearGuiComponents(
+            List<? extends GuiComponent> target
+    ) {
+        for (GuiComponent component : target) {
+            components.remove(component);
+        }
+
+        target.clear();
+    }
 
     @Override
     protected void init() {
@@ -131,17 +150,15 @@ public abstract class EconomyScreen extends Screen {
             int mouseY,
             float delta
     ) {
-        super.extractRenderState(
+        renderEconomyBackground(graphics);
+
+        renderEconomyOverlay(
                 graphics,
                 mouseX,
                 mouseY,
                 delta
         );
 
-        // Фон книги
-        renderEconomyBackground(graphics);
-
-        // Наши декоративные компоненты
         for (GuiComponent component : components) {
             component.render(
                     graphics,
@@ -150,6 +167,13 @@ public abstract class EconomyScreen extends Screen {
                     delta
             );
         }
+
+        super.extractRenderState(
+                graphics,
+                mouseX,
+                mouseY,
+                delta
+        );
     }
 
     @Override
@@ -172,6 +196,14 @@ public abstract class EconomyScreen extends Screen {
                 event,
                 doubleClick
         );
+    }
+
+    protected void renderEconomyOverlay(
+            GuiGraphicsExtractor graphics,
+            int mouseX,
+            int mouseY,
+            float delta
+    ) {
     }
 
     // =========================================================

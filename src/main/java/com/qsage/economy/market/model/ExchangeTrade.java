@@ -1,6 +1,5 @@
 package com.qsage.economy.market.model;
 
-import com.qsage.economy.market.model.TradeSide;
 import net.minecraft.resources.Identifier;
 
 import java.time.Instant;
@@ -16,6 +15,7 @@ public record ExchangeTrade(
         long totalPrice,
         Instant timestamp
 ) {
+
     public ExchangeTrade {
         if (quantity <= 0) {
             throw new IllegalArgumentException(

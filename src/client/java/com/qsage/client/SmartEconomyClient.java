@@ -3,6 +3,7 @@ package com.qsage.client;
 import com.qsage.SmartEconomy;
 import com.qsage.client.economy.ClientEconomy;
 import com.qsage.client.gui.TestGuiKeybind;
+import com.qsage.client.gui.screen.TestEconomyScreen;
 import com.qsage.client.market.ClientExchange;
 import com.qsage.economy.market.network.ExchangeSnapshotPayload;
 import com.qsage.network.BalancePayload;
@@ -14,6 +15,8 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 
 public final class SmartEconomyClient
 		implements ClientModInitializer {
+
+
 
 	@Override
 	public void onInitializeClient() {
@@ -39,20 +42,33 @@ public final class SmartEconomyClient
 					});
 				}
 		);
+
+		ClientPlayNetworking.registerGlobalReceiver(
+				ExchangeSnapshotPayload.TYPE,
+				(payload, context) ->
+						context.client().execute(() -> {
+
+							ClientExchange.update(payload);
+
+							if (context.client().gui.screen()
+									instanceof TestEconomyScreen screen) {
+
+								screen.refreshExchange();
+							}
+						})
+		);
+
 		ClientPlayNetworking.registerGlobalReceiver(
 				ExchangeSnapshotPayload.TYPE,
 				(payload, context) -> {
-
-					System.out.println(
-							"Received exchange snapshot: "
-									+ payload.quotes().size()
-					);
 
 					context.client().execute(() -> {
 						ClientExchange.update(payload);
 					});
 				}
 		);
+
+
 
 		ClientPlayConnectionEvents.DISCONNECT.register(
 				(handler, client) -> {

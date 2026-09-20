@@ -12,4 +12,23 @@ public final class PriceCalculator {
     ) {
         return asset.fundamentalPrice();
     }
+
+    public long clampToFundamentalRange(
+            long fundamentalPrice,
+            long targetPrice,
+            double maxDeviation
+    ) {
+        double minPrice =
+                fundamentalPrice * (1.0 - maxDeviation);
+
+        double maxPrice =
+                fundamentalPrice * (1.0 + maxDeviation);
+
+        return Math.round(
+                Math.max(
+                        minPrice,
+                        Math.min(maxPrice, targetPrice)
+                )
+        );
+    }
 }

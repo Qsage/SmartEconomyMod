@@ -1,0 +1,8 @@
+{
+  "market": {
+    "price_smoothing_factor": 0.20,
+    "max_price_deviation": 0.50,
+    "price_spread": 0.01,
+    "trend_neutral_threshold": 0.005
+  }
+}

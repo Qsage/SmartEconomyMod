@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
 import com.qsage.economy.market.model.ExchangeAsset;
+import com.qsage.economy.market.model.ExchangeCategory;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -28,6 +29,7 @@ public final class ExchangeAssetLoader {
                 "smart-economy",
                 "exchange/assets.json"
         );
+
 
         Resource resource = resourceManager
                 .getResource(resourceId)
@@ -100,7 +102,9 @@ public final class ExchangeAssetLoader {
         return new ExchangeAsset(
                 itemId,
                 json.base_price,
-                valuePpm
+                valuePpm,
+                json.expected_volume,
+                ExchangeCategory.valueOf(json.category)
         );
     }
 
@@ -112,5 +116,7 @@ public final class ExchangeAssetLoader {
         String item;
         long base_price;
         double value;
+        long expected_volume;
+        String category;
     }
 }

@@ -21,7 +21,7 @@ public final class GuiStyle {
             new TextureRegion(300, 220, 300, 48);
 
     public static final TextureRegion SEARCH =
-            new TextureRegion(0, 268, 200, 20);
+            new TextureRegion(0, 180, 96, 15);
 
     public static final TextureRegion BALANCE =
             new TextureRegion(96, 180  , 71, 15);
@@ -39,19 +39,50 @@ public final class GuiStyle {
             new TextureRegion(1, 196, 174, 174);
 
     public static final TextureRegion BUTTON_BUY =
-            new TextureRegion(0,0,0,0);
+            new TextureRegion(167,180,60,15);
 
     public static final TextureRegion BUTTON_BUY_HOVER =
-            new TextureRegion(0,0,0,0);
+            new TextureRegion(227,180,60,15);
 
     public static final TextureRegion BUTTON_SELL =
-            new TextureRegion(0,0,0,0);
+            new TextureRegion(167,180,60,15);
 
     public static final TextureRegion BUTTON_SELL_HOVER =
-            new TextureRegion(0,0,0,0);
+            new TextureRegion(227,180,60,15);
 
     public static final TextureRegion TRADE_AMOUNT_FIELD =
             new TextureRegion(96, 180  , 71, 15);
+
+    public static final TextureRegion CATEGORY_TAB =
+            new TextureRegion(443, 0, 23, 22);
+
+    public static final TextureRegion CATEGORY_TAB_HOVER =
+            new TextureRegion(466, 0, 23, 22);
+
+    public static final TextureRegion CATEGORY_TAB_ACTIVE =
+            new TextureRegion(489, 0, 23, 22);
+
+    public static final TextureRegion SCROLLBAR =
+            new TextureRegion(0,0,0,0);
+
+    public static final TextureRegion SCROLLBAR_THUMB=
+            new TextureRegion(0,0,0,0);
+
+    public static final TextureRegion SORT_BUTTON=
+            new TextureRegion(339,16,9,9);
+    public static final TextureRegion SORT_BUTTON_HOVER=
+            new TextureRegion(339,16,9,9);
+    public static final TextureRegion SORT_BUTTON_ACTIVE=
+            new TextureRegion(339,16,9,9);
+
+    public static final TextureRegion SORT_ICON_ALPHA =
+            new TextureRegion(339,16,9,9);
+    public static final TextureRegion SORT_ICON_PRICE =
+            new TextureRegion(339,25,9,9);
+    public static final TextureRegion SORT_ICON_QUANTITY =
+            new TextureRegion(339,34,9,9);
+
+
 
     public static final int LOT_ITEM_X = 16;
     public static final int LOT_ITEM_Y = 2;
@@ -75,14 +106,19 @@ public final class GuiStyle {
     public static final int BALANCE_TEXT_Y = 4;
 
     public static final int TRADE_ITEM_Y = 18;
-
     public static final int TRADE_NAME_Y = 40;
 
-    public static final int TRADE_AMOUNT_Y = 70;
+    public static final int TRADE_PRICE_Y = 58;
+    public static final int TRADE_TREND_Y = 56;
 
+    public static final int TRADE_AMOUNT_Y = 70;
     public static final int TRADE_BUTTON_Y = 120;
 
-    public static final int TRADE_BUTTON_GAP = 8;
+    public static final int TRADE_BUTTON_GAP = 32;
+
+    public static final int LOT_NAME_MAX_LENGTH = 16;
+    public static final int LOT_NAME_AREA_WIDTH = 90;
+
 
 
     private GuiStyle() {

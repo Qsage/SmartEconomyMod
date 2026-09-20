@@ -1,16 +1,22 @@
 package com.qsage;
 
+
+import com.qsage.config.SmartEconomyConfigManager;
 import com.qsage.economy.EconomyService;
 import com.qsage.economy.command.EconomyCommands;
+import com.qsage.economy.market.ExchangeRepository;
 import com.qsage.economy.market.ExchangeService;
-import com.qsage.economy.market.model.ExchangeAsset;
+import com.qsage.economy.market.storage.SqliteExchangeRepository;
+import com.qsage.economy.player.KnownPlayerService;
 import com.qsage.economy.storage.EconomyDatabase;
 import com.qsage.economy.storage.SqliteEconomyRepository;
 
+import com.qsage.economy.storage.SqliteKnownPlayerRepository;
 import com.qsage.network.EconomyNetworking;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.resources.Identifier;
 
 import net.minecraft.server.level.ServerPlayer;
@@ -25,10 +31,16 @@ public class SmartEconomy implements ModInitializer {
 			LoggerFactory.getLogger(MOD_ID);
 
 	private static EconomyService economy;
-
 	private static ExchangeService exchangeService;
 
+	private static ExchangeRepository exchangeRepository;
 	private static EconomyDatabase database;
+
+	private static KnownPlayerService knownPlayerService;
+
+	public static KnownPlayerService getKnownPlayerService() {
+		return knownPlayerService;
+	}
 
 	public static ExchangeService getExchangeService() {
 		if (exchangeService == null) {
@@ -40,84 +52,131 @@ public class SmartEconomy implements ModInitializer {
 		return exchangeService;
 	}
 
+
+
 	@Override
 	public void onInitialize() {
+		SmartEconomyConfigManager.load();
 
 		EconomyNetworking.registerPayloads();
 
 		EconomyCommands.register();
 
-		ServerLifecycleEvents.SERVER_STARTED.register(
-				server -> {
 
-					ExchangeService exchangeService = new ExchangeService();
+		ServerLifecycleEvents.SERVER_STARTED.register(server -> {
 
-					exchangeService.loadAssets(
-							server.getResourceManager()
+			/*
+			 * ============================================================
+			 * Economy database
+			 * ============================================================
+			 */
+
+			database = new EconomyDatabase(server);
+
+
+			/*
+			 * ============================================================
+			 * Economy repository
+			 * ============================================================
+			 */
+
+			SqliteEconomyRepository economyRepository =
+					new SqliteEconomyRepository(database);
+
+
+			SqliteKnownPlayerRepository knownPlayerRepository =
+					new SqliteKnownPlayerRepository(database.connection());
+
+			knownPlayerService =
+					new KnownPlayerService(knownPlayerRepository);
+
+
+			/*
+			 * ============================================================
+			 * Economy service
+			 * ============================================================
+			 */
+
+			EconomyService economyService =
+					new EconomyService(
+							economyRepository,
+							playerId -> {
+
+								ServerPlayer player =
+										server.getPlayerList()
+												.getPlayer(playerId);
+
+								if (player != null) {
+									EconomyNetworking.syncBalance(
+											player
+									);
+								}
+							}
 					);
-					SmartEconomy.exchangeService = exchangeService;
 
-					System.out.println(
-							"Loaded exchange assets: "
-									+ exchangeService.getAssets().size()
+
+			/*
+			 * ============================================================
+			 * Exchange repository
+			 * ============================================================
+			 */
+
+			exchangeRepository =
+					new SqliteExchangeRepository(database);
+
+
+			/*
+			 * ============================================================
+			 * Exchange service
+			 * ============================================================
+			 */
+
+			exchangeService =
+					new ExchangeService(
+							exchangeRepository,
+							economyService
 					);
 
-					for (ExchangeAsset asset : exchangeService.getAssets().values()) {
-						System.out.println(
-								"Exchange asset: "
-										+ asset.itemId()
-										+ " | base="
-										+ asset.basePrice()
-										+ " | value="
-										+ ((double) asset.valuePpm()
-										/ ExchangeAsset.VALUE_SCALE)
-										+ " | fundamental="
-										+ asset.fundamentalPrice()
-						);
-					}
 
-					database =
-							new EconomyDatabase(server);
+			/*
+			 * ============================================================
+			 * Load exchange assets
+			 * ============================================================
+			 */
 
-					SqliteEconomyRepository repository =
-							new SqliteEconomyRepository(
-									database
-							);
-
-					economy =
-							new EconomyService(
-									repository,
-									playerId -> {
-
-										ServerPlayer player =
-												server.getPlayerList()
-														.getPlayer(playerId);
-
-										if (player != null) {
-											EconomyNetworking
-													.syncBalance(player);
-										}
-									}
-							);
+			exchangeService.loadAssets(
+					server.getResourceManager()
+			);
 
 
+			/*
+			 * ============================================================
+			 * Save economy service
+			 * ============================================================
+			 */
 
-					LOGGER.info(
-							"Smart Economy server initialized"
-					);
-				}
-		);
+			economy = economyService;
 
+
+			LOGGER.info(
+					"Smart Economy started"
+			);
+
+			LOGGER.info(
+					"Loaded exchange assets: {}",
+					exchangeService.getAssets().size()
+			);
+		});
 		ServerPlayConnectionEvents.JOIN.register(
-				(listener, sender, server) -> {
+				(handler, sender, server) -> {
 
-					EconomyNetworking.syncBalance(
-							listener.getPlayer()
-					);
+					ServerPlayer player =
+							handler.getPlayer();
 
-					EconomyNetworking.syncExchange(
-							listener.getPlayer()
-					);
+					knownPlayerService.playerJoined(player);
+
+					EconomyNetworking.syncBalance(player);
+					EconomyNetworking.syncExchange(player);
 				}
 		);
 
@@ -129,7 +188,10 @@ public class SmartEconomy implements ModInitializer {
 						database = null;
 					}
 
+					knownPlayerService = null;
 					economy = null;
+					exchangeService = null;
+					exchangeRepository = null;
 
 					LOGGER.info(
 							"Smart Economy database closed"
@@ -139,6 +201,16 @@ public class SmartEconomy implements ModInitializer {
 
 		LOGGER.info(
 				"Smart Economy initialized"
+		);
+	}
+
+	public static void syncExchange(
+			ServerPlayer player
+	) {
+		ServerPlayNetworking.send(
+				player,
+				SmartEconomy.getExchangeService()
+						.createSnapshot()
 		);
 	}
 

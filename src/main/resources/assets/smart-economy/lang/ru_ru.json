@@ -13,5 +13,43 @@
   "gui.smart_economy.common.close": "Закрыть",
   "gui.smart_economy.market.sell": "Продать",
   "gui.smart_economy.market.buy": "Купить",
-  "gui.smart_economy.market.amount": "Количество"
+  "gui.smart_economy.market.amount": "Количество",
+
+  "gui.smart_economy.category.building_blocks": "Строительные блоки",
+  "gui.smart_economy.category.tools_and_weapons": "Инструменты и оружие",
+  "gui.smart_economy.category.materials": "Материалы",
+  "gui.smart_economy.category.food": "Еда",
+  "gui.smart_economy.category.redstone": "Редстоун",
+
+  "gui.smart_economy.market.sort.alphabetical": "По алфавиту",
+  "gui.smart_economy.market.sort.price": "По цене",
+  "gui.smart_economy.market.sort.quantity": "По количеству",
+
+  "gui.smart_economy.config.title": "Настройки SmartEconomy",
+
+  "gui.smart_economy.config.market": "Настройки маркета",
+  "gui.smart_economy.config.price_smoothing": "Сглаживание цены",
+  "gui.smart_economy.config.max_price_deviation": "Макс. отклонение цены",
+  "gui.smart_economy.config.price_spread": "Спред цены",
+  "gui.smart_economy.config.trend_neutral_threshold": "Порог нейтрального тренда",
+
+  "gui.smart_economy.config.pricing": "Настройки ценообразования",
+  "gui.smart_economy.config.smoothing_factor": "Сглаживание цены",
+
+  "gui.smart_economy.config.inflation": "Настройки инфляции",
+  "gui.smart_economy.config.target_inflation": "Целевая инфляция",
+  "gui.smart_economy.config.kp": "Коэффициент Kp",
+  "gui.smart_economy.config.ki": "Коэффициент Ki",
+  "gui.smart_economy.config.kd": "Коэффициент Kd",
+  "gui.smart_economy.config.max_correction": "Макс. коррекция",
+  "gui.smart_economy.config.evaluation_period": "Период оценки",
+
+  "gui.smart_economy.config.trading": "Торговля",
+  "gui.smart_economy.config.max_transaction_quantity": "Макс. количество",
+  "gui.smart_economy.config.max_transaction_value": "Макс. стоимость операции",
+  "gui.smart_economy.config.cooldown_ticks": "Задержка операции",
+
+  "gui.smart_economy.config.reset": "Сбросить",
+  "gui.smart_economy.config.cancel": "Отмена",
+  "gui.smart_economy.config.done": "Готово"
 }

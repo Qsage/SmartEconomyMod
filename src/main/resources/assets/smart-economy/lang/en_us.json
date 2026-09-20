@@ -13,6 +13,43 @@
   "gui.smart_economy.common.close": "Close",
   "gui.smart_economy.market.sell": "Sell",
   "gui.smart_economy.market.buy": "Buy",
-  "gui.smart_economy.market.amount": "Amount"
+  "gui.smart_economy.market.amount": "Amount",
 
+  "gui.smart_economy.category.building_blocks": "Building blocks",
+  "gui.smart_economy.category.tools_and_weapons": "Tools and weapons",
+  "gui.smart_economy.category.materials": "Materials",
+  "gui.smart_economy.category.food": "Food",
+  "gui.smart_economy.category.redstone": "Redstone",
+
+  "gui.smart_economy.market.sort.alphabetical": "Alphabetical",
+  "gui.smart_economy.market.sort.price": "Price",
+  "gui.smart_economy.market.sort.quantity": "Quantity",
+
+  "gui.smart_economy.config.title": "SmartEconomy Settings",
+
+  "gui.smart_economy.config.market": "Market settings",
+  "gui.smart_economy.config.price_smoothing": "Price Smoothing",
+  "gui.smart_economy.config.max_price_deviation": "Max. price deviation",
+  "gui.smart_economy.config.price_spread": "Price Spread",
+  "gui.smart_economy.config.trend_neutral_threshold": "Neutral Trend Threshold",
+
+  "gui.smart_economy.config.pricing": "Pricing settings",
+  "gui.smart_economy.config.smoothing_factor": "Price smoothing",
+
+  "gui.smart_economy.config.inflation": "Inflation settings",
+  "gui.smart_economy.config.target_inflation": "Target Inflation",
+  "gui.smart_economy.config.kp": "Kp Coefficient",
+  "gui.smart_economy.config.ki": "Ki Coefficient",
+  "gui.smart_economy.config.kd": "Kd Coefficient",
+  "gui.smart_economy.config.max_correction": "Max Correction",
+  "gui.smart_economy.config.evaluation_period": "Evaluation Period",
+
+  "gui.smart_economy.config.trading": "Trading",
+  "gui.smart_economy.config.max_transaction_quantity": "Max. quantity",
+  "gui.smart_economy.config.max_transaction_value": "Max. transaction value",
+  "gui.smart_economy.config.cooldown_ticks": "Transaction delay",
+
+  "gui.smart_economy.config.reset": "Reset",
+  "gui.smart_economy.config.cancel": "Cancel",
+  "gui.smart_economy.config.done": "Done"
 }

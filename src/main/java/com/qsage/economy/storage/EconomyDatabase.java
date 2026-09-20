@@ -52,12 +52,19 @@ public final class EconomyDatabase implements AutoCloseable {
             statement.execute("PRAGMA foreign_keys = ON");
             statement.execute("PRAGMA journal_mode = WAL");
             statement.execute("PRAGMA synchronous = NORMAL");
+            statement.execute("PRAGMA busy_timeout = 5000");
         }
     }
 
     private void createSchema() throws SQLException {
         try (Statement statement =
                      connection.createStatement()) {
+
+            /*
+             * ============================================================
+             * Economy
+             * ============================================================
+             */
 
             statement.execute("""
                 CREATE TABLE IF NOT EXISTS wallets (
@@ -104,7 +111,7 @@ public final class EconomyDatabase implements AutoCloseable {
                 ON transactions(actor_uuid)
                 """);
 
-                    statement.execute("""
+            statement.execute("""
                 CREATE INDEX IF NOT EXISTS
                 idx_transactions_target
                 ON transactions(target_uuid)
@@ -115,6 +122,72 @@ public final class EconomyDatabase implements AutoCloseable {
                 idx_transactions_timestamp
                 ON transactions(timestamp)
                 """);
+
+
+            /*
+             * ============================================================
+             * Exchange
+             * ============================================================
+             *
+             * Текущая котировка каждого биржевого предмета.
+             */
+
+            statement.execute("""
+                CREATE TABLE IF NOT EXISTS exchange_quotes (
+                    item_id TEXT PRIMARY KEY,
+                    buy_price INTEGER NOT NULL,
+                    sell_price INTEGER NOT NULL,
+                    available_quantity INTEGER NOT NULL,
+                    timestamp INTEGER NOT NULL
+                )
+                """);
+
+
+            /*
+             * ============================================================
+             * Exchange trade history
+             * ============================================================
+             */
+
+            statement.execute("""
+                CREATE TABLE IF NOT EXISTS exchange_trades (
+                    id TEXT PRIMARY KEY,
+                    player_uuid TEXT NOT NULL,
+                    item_id TEXT NOT NULL,
+                    side TEXT NOT NULL,
+                    quantity INTEGER NOT NULL,
+                    unit_price INTEGER NOT NULL,
+                    total_price INTEGER NOT NULL,
+                    timestamp INTEGER NOT NULL
+                )
+                """);
+
+            statement.execute("""
+                CREATE INDEX IF NOT EXISTS
+                idx_exchange_trades_item_timestamp
+                ON exchange_trades(item_id, timestamp)
+                """);
+
+            statement.execute("""
+                CREATE INDEX IF NOT EXISTS
+                idx_exchange_trades_timestamp
+                ON exchange_trades(timestamp)
+                """);
+
+            statement.execute("""
+                CREATE TABLE IF NOT EXISTS known_players (
+                    uuid TEXT PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    first_seen INTEGER NOT NULL,
+                    last_seen INTEGER NOT NULL,
+                    profile_data TEXT
+                );
+            """);
+
+            statement.execute("""
+                CREATE INDEX IF NOT EXISTS idx_known_players_name
+                ON known_players(name COLLATE NOCASE);
+            """);
         }
     }
 

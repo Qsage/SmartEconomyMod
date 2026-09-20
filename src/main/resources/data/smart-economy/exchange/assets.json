@@ -2,18 +2,157 @@
   "assets": [
     {
       "item": "minecraft:gold_ingot",
-      "base_price": 100,
-      "value": 1.25
+      "base_price": 15,
+      "value": 1,
+      "expected_volume": 5000,
+      "category": "MATERIALS"
     },
     {
       "item": "minecraft:iron_ingot",
-      "base_price": 50,
-      "value": 1.0
+      "base_price": 15,
+      "value": 1,
+      "expected_volume": 5000,
+      "category": "MATERIALS"
+    },
+    {
+      "item": "minecraft:copper_ingot",
+      "base_price": 15,
+      "value": 1,
+      "expected_volume": 5000,
+      "category": "MATERIALS"
+    },
+    {
+      "item": "minecraft:netherite_ingot",
+      "base_price": 500,
+      "value": 2,
+      "expected_volume": 50,
+      "category": "MATERIALS"
+    },
+    {
+      "item": "minecraft:netherite_scrap",
+      "base_price": 350,
+      "value": 1.5,
+      "expected_volume": 100,
+      "category": "MATERIALS"
+    },
+    {
+      "item": "minecraft:raw_copper_block",
+      "base_price": 125,
+      "value": 1,
+      "expected_volume": 1500,
+      "category": "MATERIALS"
+    },
+    {
+      "item": "minecraft:raw_copper",
+      "base_price": 10,
+      "value": 1,
+      "expected_volume": 1500,
+      "category": "MATERIALS"
+    },
+    {
+      "item": "minecraft:raw_iron",
+      "base_price": 10,
+      "value": 1,
+      "expected_volume": 1500,
+      "category": "MATERIALS"
+    },
+    {
+      "item": "minecraft:raw_iron_block",
+      "base_price": 10,
+      "value": 1,
+      "expected_volume": 1500,
+      "category": "MATERIALS"
+    },
+    {
+      "item": "minecraft:raw_gold_block",
+      "base_price": 125,
+      "value": 1,
+      "expected_volume": 1500,
+      "category": "MATERIALS"
+    },
+    {
+      "item": "minecraft:raw_gold",
+      "base_price": 15,
+      "value": 1,
+      "expected_volume": 1500,
+      "category": "MATERIALS"
     },
     {
       "item": "minecraft:diamond",
-      "base_price": 500,
-      "value": 1.5
+      "base_price": 250,
+      "value": 1.5,
+      "expected_volume": 1000,
+      "category": "MATERIALS"
+    },
+    {
+      "item": "minecraft:diamond_block",
+      "base_price": 2250,
+      "value": 1.5,
+      "expected_volume": 1000,
+      "category": "MATERIALS"
+    },
+    {
+      "item": "minecraft:netherite_block",
+      "base_price": 4500,
+      "value": 2,
+      "expected_volume": 50,
+      "category": "MATERIALS"
+    },
+    {
+      "item": "minecraft:iron_block",
+      "base_price": 135,
+      "value": 1,
+      "expected_volume": 5000,
+      "category": "MATERIALS"
+    },
+    {
+      "item": "minecraft:gold_block",
+      "base_price": 135,
+      "value": 1,
+      "expected_volume": 1000,
+      "category": "MATERIALS"
+    },
+    {
+      "item": "minecraft:emerald",
+      "base_price": 10,
+      "value": 1,
+      "expected_volume": 5000,
+      "category": "MATERIALS"
+    },
+    {
+      "item": "minecraft:emerald_block",
+      "base_price": 90,
+      "value": 1,
+      "expected_volume": 5000,
+      "category": "MATERIALS"
+    },
+    {
+      "item": "minecraft:lapis_lazuli",
+      "base_price": 20,
+      "value": 1.5,
+      "expected_volume": 1000,
+      "category": "MATERIALS"
+    },
+    {
+      "item": "minecraft:lapis_block",
+      "base_price": 180,
+      "value": 1.5,
+      "expected_volume": 1000,
+      "category": "MATERIALS"
+    },
+    {
+      "item": "minecraft:copper_block",
+      "base_price": 135,
+      "value": 1,
+      "expected_volume": 1000,
+      "category": "MATERIALS"
+    },
+    {
+      "item": "minecraft:exposed_copper",
+      "base_price": 150,
+      "value": 1,
+      "expected_volume": 1000,
+      "category": "MATERIALS"
     }
   ]
 }

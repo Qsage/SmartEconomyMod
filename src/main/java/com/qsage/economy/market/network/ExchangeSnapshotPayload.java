@@ -1,10 +1,12 @@
 package com.qsage.economy.market.network;
 
+import com.qsage.SmartEconomy;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public record ExchangeSnapshotPayload(
@@ -13,7 +15,7 @@ public record ExchangeSnapshotPayload(
 
     public static final Type<ExchangeSnapshotPayload> TYPE =
             new Type<>(
-                    com.qsage.SmartEconomy.id("exchange_snapshot")
+                    SmartEconomy.id("exchange_snapshot")
             );
 
     public static final StreamCodec<
@@ -21,7 +23,7 @@ public record ExchangeSnapshotPayload(
             ExchangeSnapshotPayload
             > CODEC = StreamCodec.composite(
             ByteBufCodecs.collection(
-                    java.util.ArrayList::new,
+                    ArrayList::new,
                     ExchangeQuotePayload.CODEC
             ),
             ExchangeSnapshotPayload::quotes,

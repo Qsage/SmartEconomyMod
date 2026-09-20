@@ -10,13 +10,17 @@ import java.util.Map;
 
 public final class ClientExchange {
 
-    private static final Map<Identifier, ExchangeQuotePayload> quotes =
-            new HashMap<>();
+    private static final Map<
+            Identifier,
+            ExchangeQuotePayload
+            > quotes = new HashMap<>();
 
     private ClientExchange() {
     }
 
-    public static void update(ExchangeSnapshotPayload payload) {
+    public static void update(
+            ExchangeSnapshotPayload payload
+    ) {
         quotes.clear();
 
         for (ExchangeQuotePayload quote : payload.quotes()) {
@@ -27,11 +31,16 @@ public final class ClientExchange {
         }
     }
 
-    public static ExchangeQuotePayload get(Identifier itemId) {
+    public static ExchangeQuotePayload get(
+            Identifier itemId
+    ) {
         return quotes.get(itemId);
     }
 
-    public static Map<Identifier, ExchangeQuotePayload> getAll() {
+    public static Map<
+            Identifier,
+            ExchangeQuotePayload
+            > getAll() {
         return Collections.unmodifiableMap(quotes);
     }
 

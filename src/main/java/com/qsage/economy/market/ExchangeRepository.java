@@ -10,24 +10,11 @@ import java.util.List;
 
 public interface ExchangeRepository {
 
-    /*
-     * ============================================================
-     *  Current quotes
-     * ============================================================
-     */
-
     ExchangeQuote getQuote(Identifier itemId);
 
     List<ExchangeQuote> getQuotes();
 
     void saveQuote(ExchangeQuote quote);
-
-
-    /*
-     * ============================================================
-     *  Trade history
-     * ============================================================
-     */
 
     void saveTrade(ExchangeTrade trade);
 

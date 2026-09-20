@@ -8,5 +8,6 @@ public enum MoneySink {
     REPAIR,
     TELEPORT,
     SERVER_FEE,
+    EXCHANGE_PURCHASE,
     ADMIN
 }

@@ -7,5 +7,6 @@ public enum MoneySource {
     ADVANCEMENT,
     EVENT,
     SERVER_REWARD,
+    EXCHANGE_SALE,
     ADMIN
 }
