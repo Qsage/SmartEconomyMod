@@ -188,6 +188,63 @@ public final class EconomyDatabase implements AutoCloseable {
                 CREATE INDEX IF NOT EXISTS idx_known_players_name
                 ON known_players(name COLLATE NOCASE);
             """);
+
+            statement.execute("""
+                CREATE TABLE IF NOT EXISTS bank_favorites (
+                    owner_uuid TEXT NOT NULL,
+                    target_uuid TEXT NOT NULL,
+                    created_at INTEGER NOT NULL,
+                    PRIMARY KEY (owner_uuid, target_uuid),
+                    FOREIGN KEY (target_uuid)
+                    REFERENCES known_players(uuid)
+                    ON DELETE CASCADE
+                )
+            """);
+
+            statement.execute("""
+                CREATE INDEX IF NOT EXISTS idx_bank_favorites_owner
+                ON bank_favorites(owner_uuid)
+            """);
+
+            statement.execute("""
+                CREATE TABLE IF NOT EXISTS player_skins (
+                    player_uuid TEXT PRIMARY KEY,
+                    texture_value TEXT NOT NULL,
+                    texture_signature TEXT,
+                    updated_at INTEGER NOT NULL,
+            
+                    FOREIGN KEY (player_uuid)
+                    REFERENCES known_players(uuid)
+                    ON DELETE CASCADE
+                )
+            """);
+
+
+            statement.execute("""
+                CREATE TABLE IF NOT EXISTS pending_notifications (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    player_uuid TEXT NOT NULL,
+                    sender_uuid TEXT NOT NULL,
+                    amount INTEGER NOT NULL CHECK (amount > 0),
+                    created_at INTEGER NOT NULL,
+                    delivered INTEGER NOT NULL DEFAULT 0
+                        CHECK (delivered IN (0, 1)),
+            
+                    FOREIGN KEY (player_uuid)
+                        REFERENCES known_players(uuid)
+                        ON DELETE CASCADE,
+            
+                    FOREIGN KEY (sender_uuid)
+                        REFERENCES known_players(uuid)
+                        ON DELETE CASCADE
+                )
+            """);
+
+
+            statement.execute("""
+                CREATE INDEX IF NOT EXISTS idx_pending_notifications_player
+                ON pending_notifications(player_uuid, delivered);
+            """);
         }
     }
 

@@ -1,8 +1,7 @@
 package com.qsage.client.gui;
 
 import com.qsage.SmartEconomy;
-import com.qsage.client.gui.screen.TestEconomyScreen;
-
+import com.qsage.client.gui.screen.EconomyScreen;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
@@ -36,21 +35,16 @@ public final class TestGuiKeybind {
     }
 
     public static void register() {
-
-        ClientTickEvents.END_CLIENT_TICK.register(
-                client -> {
-
-                    while (OPEN_GUI.consumeClick()) {
-
-                        if (client.player == null) {
-                            return;
-                        }
-
-                        Minecraft.getInstance().gui.setScreen(
-                                new TestEconomyScreen()
-                        );
-                    }
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            while (OPEN_GUI.consumeClick()) {
+                if (client.player == null) {
+                    continue;
                 }
-        );
+
+                Minecraft.getInstance().gui.setScreen(
+                        new EconomyScreen()
+                );
+            }
+        });
     }
 }

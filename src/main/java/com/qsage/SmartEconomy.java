@@ -3,15 +3,16 @@ package com.qsage;
 
 import com.qsage.config.SmartEconomyConfigManager;
 import com.qsage.economy.EconomyService;
+import com.qsage.economy.bank.BankFavoriteService;
 import com.qsage.economy.command.EconomyCommands;
 import com.qsage.economy.market.ExchangeRepository;
 import com.qsage.economy.market.ExchangeService;
 import com.qsage.economy.market.storage.SqliteExchangeRepository;
 import com.qsage.economy.player.KnownPlayerService;
-import com.qsage.economy.storage.EconomyDatabase;
-import com.qsage.economy.storage.SqliteEconomyRepository;
+import com.qsage.economy.player.skin.PlayerSkinRepository;
+import com.qsage.economy.player.skin.ServerPlayerSkinService;
+import com.qsage.economy.storage.*;
 
-import com.qsage.economy.storage.SqliteKnownPlayerRepository;
 import com.qsage.network.EconomyNetworking;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -22,6 +23,8 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.UUID;
 
 public class SmartEconomy implements ModInitializer {
 
@@ -35,6 +38,9 @@ public class SmartEconomy implements ModInitializer {
 
 	private static ExchangeRepository exchangeRepository;
 	private static EconomyDatabase database;
+
+	private static PlayerSkinRepository playerSkinRepository;
+	private static ServerPlayerSkinService playerSkinService;
 
 	private static KnownPlayerService knownPlayerService;
 
@@ -52,6 +58,17 @@ public class SmartEconomy implements ModInitializer {
 		return exchangeService;
 	}
 
+	private static BankFavoriteService bankFavoriteService;
+
+	public static BankFavoriteService getBankFavoriteService() {
+		if (bankFavoriteService == null) {
+			throw new IllegalStateException(
+					"BankFavoriteService is not initialized"
+			);
+		}
+
+		return bankFavoriteService;
+	}
 
 
 	@Override
@@ -64,21 +81,7 @@ public class SmartEconomy implements ModInitializer {
 
 
 		ServerLifecycleEvents.SERVER_STARTED.register(server -> {
-
-			/*
-			 * ============================================================
-			 * Economy database
-			 * ============================================================
-			 */
-
 			database = new EconomyDatabase(server);
-
-
-			/*
-			 * ============================================================
-			 * Economy repository
-			 * ============================================================
-			 */
 
 			SqliteEconomyRepository economyRepository =
 					new SqliteEconomyRepository(database);
@@ -87,15 +90,23 @@ public class SmartEconomy implements ModInitializer {
 			SqliteKnownPlayerRepository knownPlayerRepository =
 					new SqliteKnownPlayerRepository(database.connection());
 
+			playerSkinRepository = new SqlitePlayerSkinRepository(
+					database.connection()
+			);
+
+			playerSkinService = new ServerPlayerSkinService(
+					playerSkinRepository
+			);
+
 			knownPlayerService =
 					new KnownPlayerService(knownPlayerRepository);
 
+			SqliteBankFavoriteRepository favoriteRepository =
+					new SqliteBankFavoriteRepository(database);
 
-			/*
-			 * ============================================================
-			 * Economy service
-			 * ============================================================
-			 */
+			bankFavoriteService = new BankFavoriteService(
+					favoriteRepository
+			);
 
 			EconomyService economyService =
 					new EconomyService(
@@ -114,22 +125,8 @@ public class SmartEconomy implements ModInitializer {
 							}
 					);
 
-
-			/*
-			 * ============================================================
-			 * Exchange repository
-			 * ============================================================
-			 */
-
 			exchangeRepository =
 					new SqliteExchangeRepository(database);
-
-
-			/*
-			 * ============================================================
-			 * Exchange service
-			 * ============================================================
-			 */
 
 			exchangeService =
 					new ExchangeService(
@@ -137,23 +134,9 @@ public class SmartEconomy implements ModInitializer {
 							economyService
 					);
 
-
-			/*
-			 * ============================================================
-			 * Load exchange assets
-			 * ============================================================
-			 */
-
 			exchangeService.loadAssets(
 					server.getResourceManager()
 			);
-
-
-			/*
-			 * ============================================================
-			 * Save economy service
-			 * ============================================================
-			 */
 
 			economy = economyService;
 
@@ -167,16 +150,38 @@ public class SmartEconomy implements ModInitializer {
 					exchangeService.getAssets().size()
 			);
 		});
+
+
 		ServerPlayConnectionEvents.JOIN.register(
 				(handler, sender, server) -> {
 
-					ServerPlayer player =
-							handler.getPlayer();
+					ServerPlayer player = handler.getPlayer();
 
 					knownPlayerService.playerJoined(player);
 
+					EconomyNetworking.syncKnownPlayersOnJoin(
+							server,
+							player
+					);
+
 					EconomyNetworking.syncBalance(player);
 					EconomyNetworking.syncExchange(player);
+				}
+		);
+
+
+		ServerPlayConnectionEvents.DISCONNECT.register(
+				(handler, server) -> {
+
+					UUID disconnectingUuid =
+							handler.getPlayer().getUUID();
+
+					server.execute(() ->
+							EconomyNetworking.syncKnownPlayersToAll(
+									server,
+									disconnectingUuid
+							)
+					);
 				}
 		);
 
@@ -189,17 +194,22 @@ public class SmartEconomy implements ModInitializer {
 					}
 
 					knownPlayerService = null;
+					playerSkinService = null;
+					playerSkinRepository = null;
+
 					economy = null;
 					exchangeService = null;
 					exchangeRepository = null;
 
-					LOGGER.info(
+					bankFavoriteService = null;
+
+					LOGGER.warn(
 							"Smart Economy database closed"
 					);
 				}
 		);
 
-		LOGGER.info(
+		LOGGER.warn(
 				"Smart Economy initialized"
 		);
 	}
@@ -214,6 +224,13 @@ public class SmartEconomy implements ModInitializer {
 		);
 	}
 
+	public static PlayerSkinRepository getPlayerSkinRepository() {
+		return playerSkinRepository;
+	}
+
+	public static ServerPlayerSkinService getPlayerSkinService() {
+		return playerSkinService;
+	}
 
 	public static EconomyService economy() {
 

@@ -335,6 +335,7 @@ public class ExchangeService {
                     quantity
             );
         }
+        markTrade(server, player);
     }
 
     private void buy(
@@ -369,6 +370,12 @@ public class ExchangeService {
         if (totalPrice > trading.maxTransactionValue()) {
             throw new IllegalArgumentException(
                     "Transaction value exceeds the configured limit"
+            );
+        }
+
+        if (!canFit(player, item, quantity)) {
+            throw new IllegalArgumentException(
+                    "Not enough inventory space"
             );
         }
 
@@ -431,13 +438,10 @@ public class ExchangeService {
             Item item,
             long quantity
     ) {
-        long owned =
-                player.getInventory().countItem(item);
+        long owned = player.getInventory().countItem(item);
 
         if (owned < quantity) {
-            throw new IllegalArgumentException(
-                    "Not enough items"
-            );
+            throw new IllegalArgumentException("Not enough items");
         }
 
         long totalPrice;
@@ -449,7 +453,7 @@ public class ExchangeService {
             );
         } catch (ArithmeticException e) {
             throw new IllegalArgumentException(
-                    "Trade value is too large"
+                    "Trade value is too large", e
             );
         }
 
@@ -462,13 +466,6 @@ public class ExchangeService {
             );
         }
 
-        economyService.deposit(
-                player.getUUID(),
-                totalPrice,
-                MoneySource.EXCHANGE_SALE,
-                "Exchange sale: " + asset.itemId()
-        );
-
         long newAvailableQuantity;
 
         try {
@@ -478,18 +475,32 @@ public class ExchangeService {
             );
         } catch (ArithmeticException e) {
             throw new IllegalStateException(
-                    "Exchange stock is too large"
+                    "Exchange stock is too large", e
             );
         }
 
-        ExchangeQuote updatedQuote =
-                new ExchangeQuote(
-                        quote.itemId(),
-                        quote.buyPrice(),
-                        quote.sellPrice(),
-                        newAvailableQuantity,
-                        System.currentTimeMillis()
-                );
+        // Проверяем и удаляем предметы до начисления денег.
+        if (!removeItems(player, item, quantity)) {
+            throw new IllegalStateException(
+                    "Failed to remove items from inventory"
+            );
+        }
+
+        // Начисляем деньги только после успешного удаления.
+        economyService.deposit(
+                player.getUUID(),
+                totalPrice,
+                MoneySource.EXCHANGE_SALE,
+                "Exchange sale: " + asset.itemId()
+        );
+
+        ExchangeQuote updatedQuote = new ExchangeQuote(
+                quote.itemId(),
+                quote.buyPrice(),
+                quote.sellPrice(),
+                newAvailableQuantity,
+                System.currentTimeMillis()
+        );
 
         repository.saveTrade(
                 new ExchangeTrade(
@@ -505,10 +516,7 @@ public class ExchangeService {
         );
 
         ExchangeQuote recalculatedQuote =
-                recalculateQuote(
-                        asset,
-                        updatedQuote
-                );
+                recalculateQuote(asset, updatedQuote);
 
         repository.saveQuote(recalculatedQuote);
     }
@@ -601,27 +609,47 @@ public class ExchangeService {
             Item item,
             long quantity
     ) {
+        if (quantity <= 0 || quantity > Integer.MAX_VALUE) {
+            return false;
+        }
+
+        var inventory = player.getInventory();
+
+        long available = 0;
+
+        for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
+            ItemStack stack = inventory.getItem(slot);
+
+            if (!stack.isEmpty() && stack.getItem() == item) {
+                available += stack.getCount();
+            }
+        }
+
+        if (available < quantity) {
+            return false;
+        }
+
         int remaining = (int) quantity;
 
-        for (ItemStack stack :
-                player.getInventory().getNonEquipmentItems()) {
+        for (int slot = 0;
+             slot < inventory.getContainerSize() && remaining > 0;
+             slot++) {
 
-            if (remaining <= 0) {
-                break;
-            }
+            ItemStack stack = inventory.getItem(slot);
 
             if (stack.isEmpty() || stack.getItem() != item) {
                 continue;
             }
 
-            int remove = Math.min(
-                    remaining,
-                    stack.getCount()
-            );
+            int amount = Math.min(remaining, stack.getCount());
 
-            stack.shrink(remove);
-            remaining -= remove;
+            inventory.removeItem(slot, amount);
+
+            remaining -= amount;
         }
+
+        inventory.setChanged();
+        player.containerMenu.broadcastChanges();
 
         return remaining == 0;
     }

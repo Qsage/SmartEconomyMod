@@ -3,7 +3,7 @@
 	"package": "com.qsage.client.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"client": [
-		"ExampleClientMixin"
+		"MinecraftSkinCacheMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

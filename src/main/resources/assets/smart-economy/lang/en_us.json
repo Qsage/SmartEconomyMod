@@ -51,5 +51,14 @@
 
   "gui.smart_economy.config.reset": "Reset",
   "gui.smart_economy.config.cancel": "Cancel",
-  "gui.smart_economy.config.done": "Done"
+  "gui.smart_economy.config.done": "Done",
+
+  "gui.smart_economy.bank.online": "Online",
+  "gui.smart_economy.bank.offline": "Offline",
+
+  "gui.smart_economy.bank.available": "Available",
+  "gui.smart_economy.bank.locked": "Locked",
+
+  "gui.smart_economy.notification.transfer_received": "Transfer received",
+  "gui.smart_economy.notification.message": "%s"
 }

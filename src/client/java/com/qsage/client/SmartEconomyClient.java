@@ -3,15 +3,27 @@ package com.qsage.client;
 import com.qsage.SmartEconomy;
 import com.qsage.client.economy.ClientEconomy;
 import com.qsage.client.gui.TestGuiKeybind;
-import com.qsage.client.gui.screen.TestEconomyScreen;
+import com.qsage.client.gui.component.toasts.EconomyNotifications;
+import com.qsage.client.gui.component.toasts.EconomyToast;
+import com.qsage.client.gui.screen.EconomyScreen;
 import com.qsage.client.market.ClientExchange;
+import com.qsage.client.player.ClientBankFavorites;
+import com.qsage.client.player.ClientKnownPlayers;
+import com.qsage.client.player.ClientPlayerSkins;
+import com.qsage.client.skin.ClientSkinRegistry;
+import com.qsage.client.skin.ClientSkinUploader;
+import com.qsage.economy.bank.network.BankFavoritesSnapshotPayload;
 import com.qsage.economy.market.network.ExchangeSnapshotPayload;
+import com.qsage.economy.notification.network.EconomyNotificationPayload;
+import com.qsage.economy.player.network.KnownPlayersSnapshotPayload;
+import com.qsage.economy.player.network.SkinSyncPayload;
 import com.qsage.network.BalancePayload;
 
 import net.fabricmc.api.ClientModInitializer;
 
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.minecraft.network.chat.Component;
 
 public final class SmartEconomyClient
 		implements ClientModInitializer {
@@ -22,6 +34,7 @@ public final class SmartEconomyClient
 	public void onInitializeClient() {
 
 		TestGuiKeybind.register();
+		ClientSkinUploader.register();
 
 		ClientPlayNetworking.registerGlobalReceiver(
 				BalancePayload.TYPE,
@@ -34,11 +47,6 @@ public final class SmartEconomyClient
 								payload.locked()
 						);
 
-						SmartEconomy.LOGGER.debug(
-								"Received balance: available={}, locked={}",
-								payload.available(),
-								payload.locked()
-						);
 					});
 				}
 		);
@@ -51,7 +59,7 @@ public final class SmartEconomyClient
 							ClientExchange.update(payload);
 
 							if (context.client().gui.screen()
-									instanceof TestEconomyScreen screen) {
+									instanceof EconomyScreen screen) {
 
 								screen.refreshExchange();
 							}
@@ -59,14 +67,78 @@ public final class SmartEconomyClient
 		);
 
 		ClientPlayNetworking.registerGlobalReceiver(
-				ExchangeSnapshotPayload.TYPE,
+				EconomyNotificationPayload.TYPE,
 				(payload, context) -> {
 
 					context.client().execute(() -> {
-						ClientExchange.update(payload);
+
+						EconomyToast.Type type;
+
+						try {
+							type = EconomyToast.Type.valueOf(
+									payload.notificationType()
+							);
+						} catch (IllegalArgumentException e) {
+							type = EconomyToast.Type.INFO;
+						}
+
+						EconomyNotifications.show(
+								type,
+								Component.translatable(payload.titleKey()),
+								Component.translatable(
+										payload.messageKey(),
+										payload.argument()
+								)
+						);
 					});
 				}
 		);
+
+		ClientPlayNetworking.registerGlobalReceiver(
+				KnownPlayersSnapshotPayload.TYPE,
+				(payload, context) -> {
+					context.client().execute(() -> {
+
+						ClientKnownPlayers.update(payload);
+						if (context.client().gui.screen()
+								instanceof EconomyScreen screen) {
+							screen.refreshBank();
+						}
+					});
+				}
+		);
+
+
+		ClientPlayNetworking.registerGlobalReceiver(
+				BankFavoritesSnapshotPayload.TYPE,
+				(payload, context) -> {
+					context.client().execute(() -> {
+
+						ClientBankFavorites.update(payload);
+
+						if (context.client().gui.screen()
+								instanceof EconomyScreen screen) {
+
+							screen.refreshBank();
+						}
+					});
+				}
+		);
+
+
+
+		ClientPlayNetworking.registerGlobalReceiver(
+				SkinSyncPayload.TYPE,
+				(payload, context) -> {
+					context.client().execute(() -> {
+						ClientSkinRegistry.receive(
+								payload.uuid(),
+								payload.png()
+						);
+					});
+				}
+		);
+
 
 
 
@@ -74,6 +146,9 @@ public final class SmartEconomyClient
 				(handler, client) -> {
 					ClientEconomy.clear();
 					ClientExchange.clear();
+					ClientKnownPlayers.clear();
+					ClientPlayerSkins.clear();
+					ClientBankFavorites.clear();
 				}
 		);
 	}

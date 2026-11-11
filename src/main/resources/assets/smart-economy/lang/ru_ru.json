@@ -51,5 +51,19 @@
 
   "gui.smart_economy.config.reset": "Сбросить",
   "gui.smart_economy.config.cancel": "Отмена",
-  "gui.smart_economy.config.done": "Готово"
+  "gui.smart_economy.config.done": "Готово",
+
+  "gui.smart_economy.bank.online": "В сети",
+  "gui.smart_economy.bank.offline": "Не в сети",
+
+  "gui.smart_economy.bank.available": "Доступно",
+  "gui.smart_economy.bank.locked": "Заблокировано",
+
+  "gui.smart_economy.bank.transfer.recipient": "Получатель",
+  "gui.smart_economy.bank.transfer.amount": "Сумма перевода",
+  "gui.smart_economy.bank.transfer.send": "Перевести",
+  "gui.smart_economy.bank.transfer.back": "Назад",
+
+  "gui.smart_economy.notification.transfer_received": "Перевод получен",
+  "gui.smart_economy.notification.message": "%s"
 }

@@ -62,6 +62,15 @@ public final class GuiStyle {
     public static final TextureRegion CATEGORY_TAB_ACTIVE =
             new TextureRegion(489, 0, 23, 22);
 
+    public static final TextureRegion CATEGORY_TAB_LEFT =
+            new TextureRegion(443, 110, 23, 22);
+
+    public static final TextureRegion CATEGORY_TAB_LEFT_HOVER =
+            new TextureRegion(466, 110, 23, 22);
+
+    public static final TextureRegion CATEGORY_TAB_LEFT_ACTIVE =
+            new TextureRegion(489, 110, 23, 22);
+
     public static final TextureRegion SCROLLBAR =
             new TextureRegion(0,0,0,0);
 
@@ -82,7 +91,11 @@ public final class GuiStyle {
     public static final TextureRegion SORT_ICON_QUANTITY =
             new TextureRegion(339,34,9,9);
 
+    public static final TextureRegion BANK_PLAYER_ROW =
+            new TextureRegion(0, 393, 108, 22);
 
+    public static final TextureRegion BANK_ACCOUNT_BACKGROUND =
+            new TextureRegion(0, 415, 251, 36);
 
     public static final int LOT_ITEM_X = 16;
     public static final int LOT_ITEM_Y = 2;
