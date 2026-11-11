@@ -13,11 +13,11 @@ public final class GuiAtlas {
     public static final net.minecraft.resources.Identifier TEXTURE =
             SmartEconomy.id(PATH);
 
-    /**
-     * Размер всего PNG-атласа.
-     */
     public static final int WIDTH = 512;
     public static final int HEIGHT = 512;
+
+    public static final int TOAST_WIDTH = 160;
+    public static final int TOAST_HEIGHT = 39;
 
     private GuiAtlas() {
     }

@@ -60,5 +60,21 @@
   "gui.smart_economy.bank.locked": "Locked",
 
   "gui.smart_economy.notification.transfer_received": "Transfer received",
-  "gui.smart_economy.notification.message": "%s"
+  "gui.smart_economy.notification.message": "%s",
+
+  "gui.smart_economy.notification.offline_received": "Transfers received: ",
+  "gui.smart_economy.notification.offline_summary": "+%s $ · transfers: %s",
+
+  "gui.smart_economy.bank.title": "Bank",
+  "gui.smart_economy.notification.transfer_sent": "Transfer sent %s",
+
+  "gui.smart_economy.history.loading": "Loading history...",
+  "gui.smart_economy.history.empty": "The transaction history is empty",
+  "gui.smart_economy.history.incoming": "Incoming transfer",
+  "gui.smart_economy.history.outgoing": "Outgoing transfer",
+  "gui.smart_economy.history.deposit": "Credit",
+  "gui.smart_economy.history.withdraw": "Debit"
+  "gui.smart_economy.history.burn": "Deducting funds",
+  "gui.smart_economy.history.lock": "Locking",
+  "gui.smart_economy.history.unlock": "Unlocking"
 }

@@ -1,6 +1,7 @@
 package com.qsage.client.gui.screen;
 
 import com.qsage.SmartEconomy;
+import com.qsage.client.economy.ClientTransactionHistory;
 import com.qsage.client.gui.GuiAtlas;
 import com.qsage.client.gui.GuiStyle;
 import com.qsage.client.gui.component.BalanceWidget;
@@ -23,6 +24,7 @@ import java.util.*;
 public class EconomyScreen extends Screen {
     public static final int GUI_WIDTH = 320;
     public static final int GUI_HEIGHT = 180;
+
     private enum Section { EXCHANGE, AUCTION, BANK, QUESTS }
 
     private final List<GuiComponent> components = new ArrayList<>();
@@ -32,6 +34,8 @@ public class EconomyScreen extends Screen {
     private Section activeSection = Section.EXCHANGE;
 
     private BankTransferPanel bankTransferPanel;
+
+    private boolean transactionHistoryOpen = false;
 
     public EconomyScreen() {
         super(Component.translatable("gui.smart_economy.market.title"));
@@ -93,7 +97,6 @@ public class EconomyScreen extends Screen {
 
     private void setActiveSection(Section section) {
 
-        // Проверяем переход ДО изменения activeSection
         boolean openingBank =
                 section == Section.BANK
                         && activeSection != Section.BANK;
@@ -108,7 +111,7 @@ public class EconomyScreen extends Screen {
 
         if (bankPanel != null) {
             bankPanel.setVisible(
-                    section == Section.BANK
+                    section == Section.BANK && !transactionHistoryOpen
             );
         }
 
@@ -117,13 +120,18 @@ public class EconomyScreen extends Screen {
         }
 
         if (section == Section.BANK) {
-            // Сначала показываем уже сохранённые данные
             refreshBank();
-
-            // При переходе на банк запрашиваем актуальный список
             if (openingBank) {
                 ClientBankNetworking.requestPlayers();
             }
+        }
+
+        if (section != Section.BANK && bankPanel != null) {
+            bankPanel.setView(BankPanel.BankView.PLAYERS);
+        }
+
+        if (section != Section.BANK) {
+            transactionHistoryOpen = false;
         }
 
         navigationTabs.forEach((key, button) ->
@@ -304,6 +312,39 @@ public class EconomyScreen extends Screen {
                 scrollX,
                 scrollY
         );
+    }
+
+    public void openTransactionHistory() {
+        if (activeSection != Section.BANK) {
+            setActiveSection(Section.BANK);
+        }
+
+        if (bankTransferPanel != null) {
+            bankTransferPanel.close();
+        }
+
+        transactionHistoryOpen = true;
+
+        if (bankPanel != null) {
+            bankPanel.setVisible(false);
+        }
+
+        ClientTransactionHistory.clear();
+        ClientTransactionHistory.requestPage(0);
+    }
+
+    public void closeTransactionHistory() {
+        transactionHistoryOpen = false;
+
+        if (activeSection == Section.BANK && bankPanel != null) {
+            bankPanel.setVisible(true);
+        }
+    }
+
+    public void refreshTransactionHistory() {
+        if (bankPanel != null) {
+            bankPanel.refreshHistory();
+        }
     }
 
     @Override

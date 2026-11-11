@@ -1,7 +1,7 @@
 package com.qsage.client.gui.component;
 
 import com.qsage.client.economy.MoneyFormatter;
-import com.qsage.client.economy.NumberFormatter;
+import com.qsage.economy.util.NumberFormatter;
 import com.qsage.client.gui.GuiAtlas;
 import com.qsage.client.gui.GuiStyle;
 import com.qsage.client.gui.TextureRegion;
@@ -10,8 +10,6 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
-
-import static com.qsage.client.gui.GuiStyle.LOT_NAME_MAX_LENGTH;
 
 public class MarketLotWidget extends GuiComponent {
 

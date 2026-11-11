@@ -65,5 +65,21 @@
   "gui.smart_economy.bank.transfer.back": "Назад",
 
   "gui.smart_economy.notification.transfer_received": "Перевод получен",
-  "gui.smart_economy.notification.message": "%s"
+  "gui.smart_economy.notification.message": "%s",
+
+  "gui.smart_economy.notification.offline_received": "Поступления: ",
+  "gui.smart_economy.notification.offline_summary": "+%s · переводов: %s",
+
+  "gui.smart_economy.bank.title": "Банк",
+  "gui.smart_economy.notification.transfer_sent": "Перевод отправлен %s",
+
+  "gui.smart_economy.history.loading": "Загрузка истории...",
+  "gui.smart_economy.history.empty": "История операций пуста",
+  "gui.smart_economy.history.incoming": "Входящий перевод",
+  "gui.smart_economy.history.outgoing": "Исходящий перевод",
+  "gui.smart_economy.history.deposit": "Зачисление",
+  "gui.smart_economy.history.withdraw": "Списание",
+  "gui.smart_economy.history.burn": "Списание средств",
+  "gui.smart_economy.history.lock": "Блокировка",
+  "gui.smart_economy.history.unlock": "Разблокировка"
 }

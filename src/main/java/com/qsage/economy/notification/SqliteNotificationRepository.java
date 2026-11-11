@@ -137,6 +137,42 @@ public final class SqliteNotificationRepository {
         }
     }
 
+
+    public void markDeliveredUpTo(
+            UUID playerUuid,
+            long lastNotificationId
+    ) {
+        if (playerUuid == null || lastNotificationId <= 0) {
+            throw new IllegalArgumentException(
+                    "Invalid notification acknowledgement"
+            );
+        }
+
+        String sql = """
+            UPDATE pending_notifications
+            SET delivered = 1
+            WHERE player_uuid = ?
+              AND id <= ?
+              AND delivered = 0
+            """;
+
+        try (PreparedStatement statement =
+                     connection.prepareStatement(sql)) {
+
+            statement.setString(1, playerUuid.toString());
+            statement.setLong(2, lastNotificationId);
+
+            statement.executeUpdate();
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Failed to acknowledge offline notifications",
+                    e
+            );
+        }
+    }
+
+
     public PendingSummary getPendingSummary(UUID playerUuid) {
         String sql = """
                 SELECT

@@ -7,8 +7,14 @@ import com.qsage.economy.market.network.ExchangeRefreshPayload;
 import com.qsage.economy.market.network.ExchangeSnapshotPayload;
 import com.qsage.economy.market.network.ExchangeTradePayload;
 import com.qsage.economy.notification.network.EconomyNotificationPayload;
+import com.qsage.economy.notification.network.OfflineNotificationsAckPayload;
+import com.qsage.economy.notification.network.OfflineNotificationsPayload;
 import com.qsage.economy.player.KnownPlayer;
 import com.qsage.economy.player.network.*;
+import com.qsage.economy.transaction.Transaction;
+import com.qsage.economy.transaction.network.TransactionHistoryRequestPayload;
+import com.qsage.economy.transaction.network.TransactionHistorySnapshotPayload;
+import com.qsage.economy.util.NumberFormatter;
 import com.qsage.server.skin.ServerSkinStorage;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -20,6 +26,7 @@ import net.minecraft.world.level.storage.LevelResource;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -88,6 +95,92 @@ public final class EconomyNetworking {
                 KnownPlayersRequestPayload.CODEC
         );
 
+        PayloadTypeRegistry.clientboundPlay().register(
+                OfflineNotificationsPayload.TYPE,
+                OfflineNotificationsPayload.CODEC
+        );
+
+        PayloadTypeRegistry.serverboundPlay().register(
+                OfflineNotificationsAckPayload.TYPE,
+                OfflineNotificationsAckPayload.CODEC
+        );
+
+        PayloadTypeRegistry.serverboundPlay().register(
+                TransactionHistoryRequestPayload.TYPE,
+                TransactionHistoryRequestPayload.CODEC
+        );
+
+        PayloadTypeRegistry.clientboundPlay().register(
+                TransactionHistorySnapshotPayload.TYPE,
+                TransactionHistorySnapshotPayload.CODEC
+        );
+
+        ServerPlayNetworking.registerGlobalReceiver(
+                TransactionHistoryRequestPayload.TYPE,
+                (payload, context) -> {
+
+                    ServerPlayer player = context.player();
+
+                    context.server().execute(() -> {
+                        try {
+                            int page = payload.page();
+
+                            if (page < 0 || page > 100_000) {
+                                return;
+                            }
+
+                            int pageSize = 20;
+                            int offset = page * pageSize;
+
+                            List<Transaction> history =
+                                    SmartEconomy.economy().getTransactionHistory(
+                                            player.getUUID(),
+                                            pageSize + 1,
+                                            offset
+                                    );
+
+                            boolean hasNextPage = history.size() > pageSize;
+
+                            List<Transaction> visibleHistory =
+                                    history.subList(
+                                            0,
+                                            Math.min(pageSize, history.size())
+                                    );
+
+                            ServerPlayNetworking.send(
+                                    player,
+                                    new TransactionHistorySnapshotPayload(
+                                            page,
+                                            hasNextPage,
+                                            List.copyOf(visibleHistory)
+                                    )
+                            );
+
+                        } catch (Exception e) {
+                            SmartEconomy.LOGGER.error(
+                                    "Failed to load transaction history for {}",
+                                    player.getUUID(),
+                                    e
+                            );
+                        }
+                    });
+                }
+        );
+
+        ServerPlayNetworking.registerGlobalReceiver(
+                OfflineNotificationsAckPayload.TYPE,
+                (payload, context) -> {
+
+                    ServerPlayer player = context.player();
+
+                    context.server().execute(() -> {
+                        SmartEconomy.acknowledgeOfflineNotifications(
+                                player.getUUID(),
+                                payload.lastNotificationId()
+                        );
+                    });
+                }
+        );
 
         ServerPlayNetworking.registerGlobalReceiver(
                 BankFavoriteTogglePayload.TYPE,
@@ -324,12 +417,11 @@ public final class EconomyNetworking {
 
                             if (onlineRecipient != null) {
 
-                                String senderName =
-                                        sender.getGameProfile().name();
+                                String senderName = sender.getGameProfile().name();
 
-                                String amountText =
-                                        String.format("%,d", payload.amount())
-                                                .replace(',', ' ');
+                                String amountText = NumberFormatter.formatCompact(
+                                        payload.amount()
+                                );
 
                                 String message =
                                         "+" + amountText + " $ от " + senderName;
@@ -344,8 +436,24 @@ public final class EconomyNetworking {
                                         )
                                 );
 
-                                // Обновляем баланс получателя
                                 syncBalance(onlineRecipient);
+
+                            } else {
+
+                                // Получатель офлайн — сохраняем уведомление
+                                try {
+                                    SmartEconomy.getNotificationRepository()
+                                            .addPendingNotification(
+                                                    payload.target(),
+                                                    sender.getUUID(),
+                                                    payload.amount()
+                                            );
+                                } catch (Exception notificationError) {
+                                    SmartEconomy.LOGGER.error(
+                                            "Transfer completed, but offline notification could not be saved",
+                                            notificationError
+                                    );
+                                }
                             }
 
 

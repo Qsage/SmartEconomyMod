@@ -6,10 +6,18 @@ import com.qsage.client.economy.MoneyFormatter;
 import com.qsage.client.gui.GuiAtlas;
 import com.qsage.client.gui.GuiStyle;
 import com.qsage.client.gui.PlayerHeadRenderer;
+import com.qsage.client.player.ClientKnownPlayers;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 
+import com.qsage.client.economy.ClientTransactionHistory;
+import com.qsage.economy.transaction.Transaction;
+import com.qsage.economy.transaction.TransactionType;
+
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -57,6 +65,29 @@ public final class BankPanel {
         scrollOffset = 0;
     }
 
+    public enum BankView {
+        PLAYERS,
+        HISTORY
+    }
+
+    private BankView view = BankView.PLAYERS;
+
+    private int historyScrollOffset = 0;
+
+    private static final int HISTORY_X = 18;
+    private static final int HISTORY_Y = 53;
+    private static final int HISTORY_ROW_HEIGHT = 29;
+    private static final int HISTORY_VISIBLE_ROWS = 4;
+    private static final int HISTORY_WIDTH = 257;
+
+    private static final DateTimeFormatter HISTORY_TIME_FORMAT =
+            DateTimeFormatter.ofPattern("HH:mm")
+                    .withZone(ZoneId.systemDefault());
+
+    private static final DateTimeFormatter HISTORY_DATE_FORMAT =
+            DateTimeFormatter.ofPattern("dd.MM.yyyy, HH:mm")
+                    .withZone(ZoneId.systemDefault());
+
     public void setOnRecipientSelected(Consumer<BankPlayer> callback) {
         onRecipientSelected = callback;
     }
@@ -89,6 +120,127 @@ public final class BankPanel {
         );
     }
 
+    private void renderTransactionTooltip(
+            GuiGraphicsExtractor graphics,
+            Transaction transaction,
+            UUID self,
+            int mouseX,
+            int mouseY
+    ) {
+        var font = Minecraft.getInstance().font;
+
+        boolean incoming =
+                transaction.type() == TransactionType.TRANSFER
+                        && self.equals(transaction.target());
+
+        boolean positive = incoming
+                || transaction.type() == TransactionType.DEPOSIT
+                || transaction.type() == TransactionType.UNLOCK;
+
+        Component title = switch (transaction.type()) {
+            case TRANSFER -> Component.translatable(
+                    incoming
+                            ? "gui.smart_economy.history.incoming"
+                            : "gui.smart_economy.history.outgoing"
+            );
+            case DEPOSIT -> Component.translatable(
+                    "gui.smart_economy.history.deposit"
+            );
+            case WITHDRAW -> Component.translatable(
+                    "gui.smart_economy.history.withdraw"
+            );
+            case BURN -> Component.translatable(
+                    "gui.smart_economy.history.burn"
+            );
+            case LOCK -> Component.translatable(
+                    "gui.smart_economy.history.lock"
+            );
+            case UNLOCK -> Component.translatable(
+                    "gui.smart_economy.history.unlock"
+            );
+        };
+
+        List<Component> lines = new ArrayList<>();
+
+        lines.add(title.copy().withStyle(
+                ChatFormatting.LIGHT_PURPLE,
+                ChatFormatting.BOLD
+        ));
+
+        if (transaction.type() == TransactionType.TRANSFER) {
+            UUID otherPlayer = incoming
+                    ? transaction.actor()
+                    : transaction.target();
+
+            if (otherPlayer != null) {
+                String name = ClientKnownPlayers.getAll()
+                        .stream()
+                        .filter(player -> player.uuid().equals(otherPlayer))
+                        .map(player -> player.name())
+                        .findFirst()
+                        .orElse("Игрок");
+
+                lines.add(
+                        Component.literal(
+                                        incoming ? "Отправитель: " : "Получатель: "
+                                ).withStyle(ChatFormatting.GRAY)
+                                .append(
+                                        Component.literal(name)
+                                                .withStyle(ChatFormatting.WHITE)
+                                )
+                );
+            }
+        }
+
+        lines.add(
+                Component.literal("Дата: ")
+                        .withStyle(ChatFormatting.GRAY)
+                        .append(
+                                Component.literal(
+                                        HISTORY_DATE_FORMAT.format(
+                                                transaction.timestamp()
+                                        )
+                                ).withStyle(ChatFormatting.WHITE)
+                        )
+        );
+
+        String amountText =
+                (positive ? "+" : "−")
+                        + MoneyFormatter.formatFull(
+                        transaction.amount()
+                );
+
+        lines.add(
+                Component.literal("Сумма: ")
+                        .withStyle(ChatFormatting.GRAY)
+                        .append(
+                                Component.literal(amountText)
+                                        .withStyle(
+                                                positive
+                                                        ? ChatFormatting.GREEN
+                                                        : ChatFormatting.RED
+                                        )
+                        )
+        );
+
+        if (transaction.reason() != null
+                && !transaction.reason().isBlank()) {
+
+            lines.add(Component.empty());
+
+            lines.add(
+                    Component.literal(transaction.reason())
+                            .withStyle(ChatFormatting.DARK_GRAY)
+            );
+        }
+
+        graphics.setComponentTooltipForNextFrame(
+                font,
+                lines,
+                mouseX,
+                mouseY
+        );
+    }
 
     private List<BankPlayer> filtered() {
         String query = searchText.trim()
@@ -360,6 +512,11 @@ public final class BankPanel {
 
         renderAccount(graphics, mouseX, mouseY);
 
+        if (view == BankView.HISTORY) {
+            renderHistory(graphics, mouseX, mouseY);
+            return;
+        }
+
         List<BankPlayer> filtered = filtered();
 
         int end = Math.min(
@@ -449,10 +606,61 @@ public final class BankPanel {
     }
 
 
-    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        if (!visible || scrollY == 0 || !insideList(mouseX, mouseY)) return false;
+    public boolean mouseScrolled(
+            double mouseX,
+            double mouseY,
+            double scrollX,
+            double scrollY
+    ) {
+        if (!visible || scrollY == 0 || !insideList(mouseX, mouseY)) {
+            return false;
+        }
 
-        scrollOffset = Math.max(0, Math.min(maxScroll(), scrollOffset - (int) Math.signum(scrollY)));
+        if (view == BankView.HISTORY) {
+
+            int total = ClientTransactionHistory
+                    .getTransactions()
+                    .size();
+
+            int maxOffset = Math.max(
+                    0,
+                    total - HISTORY_VISIBLE_ROWS
+            );
+
+            int direction = (int) Math.signum(scrollY);
+
+            historyScrollOffset = Math.max(
+                    0,
+                    Math.min(
+                            maxOffset,
+                            historyScrollOffset - direction
+                    )
+            );
+
+            // Когда до конца осталось две строки,
+            // запрашиваем следующую страницу.
+            boolean nearEnd =
+                    historyScrollOffset + HISTORY_VISIBLE_ROWS
+                            >= total - 2;
+
+            if (nearEnd
+                    && direction < 0
+                    && ClientTransactionHistory.hasNextPage()
+                    && !ClientTransactionHistory.isLoading()) {
+
+                ClientTransactionHistory.requestNextPage();
+            }
+
+            return true;
+        }
+
+        scrollOffset = Math.max(
+                0,
+                Math.min(
+                        maxScroll(),
+                        scrollOffset - (int) Math.signum(scrollY)
+                )
+        );
 
         return true;
     }
@@ -460,6 +668,14 @@ public final class BankPanel {
 
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (!visible || button != 0) {
+            return false;
+        }
+
+        if (handleBalanceClick(mouseX, mouseY)) {
+            return true;
+        }
+
+        if (view == BankView.HISTORY) {
             return false;
         }
 
@@ -511,6 +727,306 @@ public final class BankPanel {
         return false;
     }
 
+    private void renderHistory(
+            GuiGraphicsExtractor graphics,
+            int mouseX,
+            int mouseY
+    ) {
+        var minecraft = Minecraft.getInstance();
+        var font = minecraft.font;
+
+        if (minecraft.player == null) {
+            return;
+        }
+
+        UUID self = minecraft.player.getUUID();
+
+        List<Transaction> transactions =
+                ClientTransactionHistory.getTransactions();
+
+        int x = screen.guiLeft() + HISTORY_X;
+        int y = screen.guiTop() + HISTORY_Y;
+
+        if (ClientTransactionHistory.isLoading()) {
+            graphics.text(
+                    font,
+                    Component.translatable(
+                            "gui.smart_economy.history.loading"
+                    ),
+                    x + 4,
+                    y + 5,
+                    0xFFFFFFFF,
+                    false
+            );
+            return;
+        }
+
+        if (transactions.isEmpty()
+                && !ClientTransactionHistory.isLoading()) {
+
+            graphics.text(
+                    font,
+                    Component.translatable(
+                            "gui.smart_economy.history.empty"
+                    ),
+                    x + 4,
+                    y + 5,
+                    0xFF777777,
+                    false
+            );
+
+            return;
+        }
+
+        int end = Math.min(
+                transactions.size(),
+                historyScrollOffset + HISTORY_VISIBLE_ROWS
+        );
+
+        for (int i = historyScrollOffset; i < end; i++) {
+
+            Transaction transaction = transactions.get(i);
+
+            int visibleIndex = i - historyScrollOffset;
+            int rowY = y + visibleIndex * HISTORY_ROW_HEIGHT;
+
+            GuiAtlas.draw(
+                    graphics,
+                    GuiStyle.MARKET_LOT,
+                    x,
+                    rowY
+            );
+
+            boolean incoming =
+                    transaction.type() == TransactionType.TRANSFER
+                            && self.equals(transaction.target());
+
+            boolean outgoing =
+                    transaction.type() == TransactionType.TRANSFER
+                            && self.equals(transaction.actor());
+
+            UUID otherPlayer = null;
+
+            if (incoming) {
+                otherPlayer = transaction.actor();
+            } else if (outgoing) {
+                otherPlayer = transaction.target();
+            }
+
+            // Голова второго участника перевода
+            if (otherPlayer != null) {
+                PlayerHeadRenderer.render(
+                        graphics,
+                        otherPlayer,
+                        x + 4,
+                        rowY + 3,
+                        16
+                );
+            }
+
+            Component title;
+            boolean positive;
+
+            switch (transaction.type()) {
+                case TRANSFER -> {
+                    positive = incoming;
+                    title = Component.translatable(
+                            incoming
+                                    ? "gui.smart_economy.history.incoming"
+                                    : "gui.smart_economy.history.outgoing"
+                    );
+                }
+                case DEPOSIT -> {
+                    positive = true;
+                    title = Component.translatable(
+                            "gui.smart_economy.history.deposit"
+                    );
+                }
+                case WITHDRAW -> {
+                    positive = false;
+                    title = Component.translatable(
+                            "gui.smart_economy.history.withdraw"
+                    );
+                }
+                case BURN -> {
+                    positive = false;
+                    title = Component.translatable(
+                            "gui.smart_economy.history.burn"
+                    );
+                }
+                case LOCK -> {
+                    positive = false;
+                    title = Component.translatable(
+                            "gui.smart_economy.history.lock"
+                    );
+                }
+                case UNLOCK -> {
+                    positive = true;
+                    title = Component.translatable(
+                            "gui.smart_economy.history.unlock"
+                    );
+                }
+                default -> {
+                    positive = false;
+                    title = Component.literal(transaction.type().name());
+                }
+            }
+
+            int textX = x + 25;
+
+            String amountText =
+                    (positive ? "+" : "−")
+                            + MoneyFormatter.format(transaction.amount());
+
+            int amountRight = x + HISTORY_WIDTH - 6;
+            int amountX = amountRight - font.width(amountText);
+
+            int maxTitleWidth = Math.max(0, amountX - textX - 5);
+
+            String titleText = font.plainSubstrByWidth(
+                    title.getString(),
+                    maxTitleWidth
+            );
+
+            graphics.text(
+                    font,
+                    titleText,
+                    textX,
+                    rowY + 3,
+                    0xFFFFFFFF,
+                    false
+            );
+
+            String time = HISTORY_TIME_FORMAT.format(
+                    transaction.timestamp()
+            );
+
+            String subtitle = time;
+
+            if (otherPlayer != null) {
+                UUID playerId = otherPlayer;
+
+                String playerName = ClientKnownPlayers.getAll()
+                        .stream()
+                        .filter(player -> player.uuid().equals(playerId))
+                        .map(player -> player.name())
+                        .findFirst()
+                        .orElse("Игрок");
+
+                subtitle = playerName + " · " + time;
+            }
+
+            String subtitleText = font.plainSubstrByWidth(
+                    subtitle,
+                    Math.max(0, amountX - textX - 5)
+            );
+
+            graphics.text(
+                    font,
+                    subtitleText,
+                    textX,
+                    rowY + 12,
+                    0xFFAAAAAA,
+                    false
+            );
+
+            graphics.text(
+                    font,
+                    amountText,
+                    amountX,
+                    rowY + 7,
+                    positive ? 0xFF35E06B : 0xFFFF6464,
+                    false
+            );
+
+            if (inside(
+                    mouseX,
+                    mouseY,
+                    x,
+                    rowY,
+                    HISTORY_WIDTH,
+                    22
+            )) {
+                renderTransactionTooltip(
+                        graphics,
+                        transaction,
+                        self,
+                        mouseX,
+                        mouseY
+                );
+            }
+        }
+    }
+
+    private boolean handleBalanceClick(double mouseX, double mouseY) {
+        Minecraft minecraft = Minecraft.getInstance();
+
+        if (minecraft.player == null) {
+            return false;
+        }
+
+        var font = minecraft.font;
+
+        int x = screen.guiLeft() + 2;
+        int y = screen.guiTop() + 6;
+
+        int headY = y + 13;
+        int bottomY = headY + 24;
+        int balanceY = bottomY - font.lineHeight + 2;
+
+        int availableRight = x + 126;
+
+        String availableText = MoneyFormatter.format(
+                ClientEconomy.getAvailable()
+        );
+
+        int availableValueX =
+                availableRight - font.width(availableText);
+
+        if (!inside(
+                mouseX,
+                mouseY,
+                availableValueX,
+                balanceY,
+                font.width(availableText),
+                font.lineHeight
+        )) {
+            return false;
+        }
+
+        if (view == BankView.PLAYERS) {
+            setView(BankView.HISTORY);
+
+            ClientTransactionHistory.open();
+        } else {
+            setView(BankView.PLAYERS);
+        }
+
+        return true;
+    }
+
+    public void setView(BankView view) {
+        this.view = view;
+        historyScrollOffset = 0;
+    }
+
+    public BankView getView() {
+        return view;
+    }
+
+    public void refreshHistory() {
+        int maxOffset = Math.max(
+                0,
+                ClientTransactionHistory.getTransactions().size()
+                        - HISTORY_VISIBLE_ROWS
+        );
+
+        historyScrollOffset = Math.min(
+                historyScrollOffset,
+                maxOffset
+        );
+
+    }
 
     private boolean insideList(double mx, double my) {
         return inside(mx, my, screen.guiLeft() + LEFT_X, screen.guiTop() + FIRST_Y, 269, ROWS_PER_COLUMN * ROW_HEIGHT);

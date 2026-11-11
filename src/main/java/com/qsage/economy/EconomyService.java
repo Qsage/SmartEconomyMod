@@ -8,6 +8,7 @@ import com.qsage.economy.transaction.TransactionType;
 import com.qsage.economy.wallet.Wallet;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -375,6 +376,18 @@ public final class EconomyService {
                 + (difference == 0
                 ? "OK"
                 : "CORRUPTED");
+    }
+
+    public List<Transaction> getTransactionHistory(
+            UUID playerId,
+            int limit,
+            int offset
+    ) {
+        return repository.getTransactionHistory(
+                playerId,
+                limit,
+                offset
+        );
     }
     // =========================================================
 

@@ -1,6 +1,9 @@
 
 package com.qsage.client.gui.component.toasts;
 
+import com.qsage.client.gui.GuiAtlas;
+import com.qsage.client.gui.GuiStyle;
+
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.toasts.Toast;
@@ -10,6 +13,11 @@ import net.minecraft.network.chat.Component;
 public final class EconomyToast implements Toast {
 
     private static final long DURATION_MS = 5000L;
+
+    private static final int TEXT_X = 12;
+    private static final int TITLE_Y = 5;
+    private static final int MESSAGE_Y = 24;
+    private static final int TEXT_RIGHT_MARGIN = 10;
 
     public enum Type {
         SUCCESS(0xFF35E06B),
@@ -43,25 +51,6 @@ public final class EconomyToast implements Toast {
         this.message = message;
     }
 
-
-    private static String truncate(
-            Font font,
-            String text,
-            int maxWidth
-    ) {
-        if (font.width(text) <= maxWidth) {
-            return text;
-        }
-
-        String ellipsis = "…";
-
-        return font.plainSubstrByWidth(
-                text,
-                Math.max(0, maxWidth - font.width(ellipsis))
-        ) + ellipsis;
-    }
-
-
     @Override
     public Visibility getWantedVisibility() {
         return visibility;
@@ -77,6 +66,15 @@ public final class EconomyToast implements Toast {
         }
     }
 
+    @Override
+    public int width() {
+        return GuiAtlas.TOAST_WIDTH;
+    }
+
+    @Override
+    public int height() {
+        return GuiAtlas.TOAST_HEIGHT;
+    }
 
     @Override
     public void extractRenderState(
@@ -84,22 +82,17 @@ public final class EconomyToast implements Toast {
             Font font,
             long fullyVisibleForMs
     ) {
-        // Фон уведомления
-        graphics.fill(
-                0, 0,
-                width(), height(),
-                0xEE202020
+
+        // Фон из нашего GUI-атласа
+        GuiAtlas.draw(
+                graphics,
+                GuiStyle.ECONOMY_TOASTS,
+                0,
+                0
         );
 
-        // Цветовая полоса слева
-        graphics.fill(
-                0, 0,
-                3, height(),
-                type.color()
-        );
-
-        // Максимальная ширина текста
-        int maxTextWidth = width() - 20;
+        int maxTextWidth =
+                width() - TEXT_X - TEXT_RIGHT_MARGIN;
 
         String titleText = truncate(
                 font,
@@ -117,19 +110,40 @@ public final class EconomyToast implements Toast {
         graphics.text(
                 font,
                 titleText,
-                10, 5,
+                TEXT_X,
+                TITLE_Y,
                 type.color(),
                 false
         );
 
-        // Описание
+        // Текст уведомления
         graphics.text(
                 font,
                 messageText,
-                10, 18,
+                TEXT_X,
+                MESSAGE_Y,
                 0xFFFFFFFF,
                 false
         );
     }
 
+    private static String truncate(
+            Font font,
+            String text,
+            int maxWidth
+    ) {
+        if (font.width(text) <= maxWidth) {
+            return text;
+        }
+
+        String ellipsis = "…";
+
+        return font.plainSubstrByWidth(
+                text,
+                Math.max(
+                        0,
+                        maxWidth - font.width(ellipsis)
+                )
+        ) + ellipsis;
+    }
 }

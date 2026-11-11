@@ -1,12 +1,17 @@
 package com.qsage.economy.storage;
 
 
+import com.qsage.economy.transaction.Transaction;
+import com.qsage.economy.transaction.TransactionType;
 import com.qsage.economy.wallet.Wallet;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -212,5 +217,75 @@ public final class SqliteEconomyRepository
                     e
             );
         }
+    }
+
+    @Override
+    public List<Transaction> getTransactionHistory(
+            UUID playerId,
+            int limit,
+            int offset
+    ) {
+        String sql = """
+            SELECT
+                id,
+                timestamp,
+                type,
+                actor_uuid,
+                target_uuid,
+                amount,
+                reason
+            FROM transactions
+            WHERE actor_uuid = ?
+               OR target_uuid = ?
+            ORDER BY timestamp DESC, rowid DESC
+            LIMIT ? OFFSET ?
+            """;
+
+        List<Transaction> history = new ArrayList<>();
+
+        try (PreparedStatement statement =
+                     database.connection().prepareStatement(sql)) {
+
+            String playerUuid = playerId.toString();
+
+            statement.setString(1, playerUuid);
+            statement.setString(2, playerUuid);
+            statement.setInt(3, Math.max(1, Math.min(limit, 100)));
+            statement.setInt(4, Math.max(0, offset));
+
+            try (ResultSet result = statement.executeQuery()) {
+
+                while (result.next()) {
+
+                    Transaction transaction = new Transaction(
+                            UUID.fromString(result.getString("id")),
+                            Instant.ofEpochMilli(
+                                    result.getLong("timestamp")
+                            ),
+                            TransactionType.valueOf(
+                                    result.getString("type")
+                            ),
+                            readUuid(result.getString("actor_uuid")),
+                            readUuid(result.getString("target_uuid")),
+                            result.getLong("amount"),
+                            result.getString("reason")
+                    );
+
+                    history.add(transaction);
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Failed to load transaction history for " + playerId,
+                    e
+            );
+        }
+
+        return history;
+    }
+
+    private static UUID readUuid(String value) {
+        return value == null ? null : UUID.fromString(value);
     }
 }

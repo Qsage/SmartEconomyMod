@@ -15,7 +15,7 @@ public final class GuiStyle {
             new TextureRegion(316, 20, 20, 20);
 
     public static final TextureRegion MARKET_LOT =
-            new TextureRegion(0, 371, 275, 22);
+            new TextureRegion(0, 371, 257, 22);
 
     public static final TextureRegion MARKET_LOT_HOVER =
             new TextureRegion(300, 220, 300, 48);
@@ -96,6 +96,9 @@ public final class GuiStyle {
 
     public static final TextureRegion BANK_ACCOUNT_BACKGROUND =
             new TextureRegion(0, 415, 251, 36);
+
+    public static final TextureRegion ECONOMY_TOASTS =
+            new TextureRegion(352, 312, 160, 39);
 
     public static final int LOT_ITEM_X = 16;
     public static final int LOT_ITEM_Y = 2;

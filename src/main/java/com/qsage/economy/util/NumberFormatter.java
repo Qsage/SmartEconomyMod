@@ -1,4 +1,4 @@
-package com.qsage.client.economy;
+package com.qsage.economy.util;
 
 import java.util.Locale;
 

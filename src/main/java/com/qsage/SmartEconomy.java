@@ -8,6 +8,10 @@ import com.qsage.economy.command.EconomyCommands;
 import com.qsage.economy.market.ExchangeRepository;
 import com.qsage.economy.market.ExchangeService;
 import com.qsage.economy.market.storage.SqliteExchangeRepository;
+import com.qsage.economy.notification.PendingNotification;
+import com.qsage.economy.notification.SqliteNotificationRepository;
+import com.qsage.economy.notification.network.EconomyNotificationPayload;
+import com.qsage.economy.notification.network.OfflineNotificationsPayload;
 import com.qsage.economy.player.KnownPlayerService;
 import com.qsage.economy.player.skin.PlayerSkinRepository;
 import com.qsage.economy.player.skin.ServerPlayerSkinService;
@@ -24,6 +28,9 @@ import net.minecraft.server.level.ServerPlayer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class SmartEconomy implements ModInitializer {
@@ -43,6 +50,9 @@ public class SmartEconomy implements ModInitializer {
 	private static ServerPlayerSkinService playerSkinService;
 
 	private static KnownPlayerService knownPlayerService;
+
+	private static final Map<UUID, Long> awaitingNotificationAck =
+			new HashMap<>();
 
 	public static KnownPlayerService getKnownPlayerService() {
 		return knownPlayerService;
@@ -70,6 +80,17 @@ public class SmartEconomy implements ModInitializer {
 		return bankFavoriteService;
 	}
 
+	private static SqliteNotificationRepository notificationRepository;
+
+	public static SqliteNotificationRepository getNotificationRepository() {
+		if (notificationRepository == null) {
+			throw new IllegalStateException(
+					"NotificationRepository is not initialized"
+			);
+		}
+
+		return notificationRepository;
+	}
 
 	@Override
 	public void onInitialize() {
@@ -82,6 +103,8 @@ public class SmartEconomy implements ModInitializer {
 
 		ServerLifecycleEvents.SERVER_STARTED.register(server -> {
 			database = new EconomyDatabase(server);
+
+			notificationRepository = new SqliteNotificationRepository(database);
 
 			SqliteEconomyRepository economyRepository =
 					new SqliteEconomyRepository(database);
@@ -166,6 +189,8 @@ public class SmartEconomy implements ModInitializer {
 
 					EconomyNetworking.syncBalance(player);
 					EconomyNetworking.syncExchange(player);
+
+					sendOfflineNotifications(player);
 				}
 		);
 
@@ -182,6 +207,8 @@ public class SmartEconomy implements ModInitializer {
 									disconnectingUuid
 							)
 					);
+
+					awaitingNotificationAck.remove(disconnectingUuid);
 				}
 		);
 
@@ -202,6 +229,10 @@ public class SmartEconomy implements ModInitializer {
 					exchangeRepository = null;
 
 					bankFavoriteService = null;
+
+					notificationRepository = null;
+
+					awaitingNotificationAck.clear();
 
 					LOGGER.warn(
 							"Smart Economy database closed"
@@ -232,6 +263,7 @@ public class SmartEconomy implements ModInitializer {
 		return playerSkinService;
 	}
 
+
 	public static EconomyService economy() {
 
 		if (economy == null) {
@@ -249,4 +281,78 @@ public class SmartEconomy implements ModInitializer {
 				path
 		);
 	}
+
+
+
+	private static void sendOfflineNotifications(ServerPlayer player) {
+
+		List<PendingNotification> notifications =
+				getNotificationRepository()
+						.getPendingNotifications(player.getUUID());
+
+		if (notifications.isEmpty()) {
+			return;
+		}
+
+		long totalAmount = 0;
+		long lastNotificationId = 0;
+
+		for (PendingNotification notification : notifications) {
+
+			totalAmount = Math.addExact(
+					totalAmount,
+					notification.amount()
+			);
+
+			lastNotificationId = Math.max(
+					lastNotificationId,
+					notification.id()
+			);
+		}
+
+		awaitingNotificationAck.put(
+				player.getUUID(),
+				lastNotificationId
+		);
+
+		ServerPlayNetworking.send(
+				player,
+				new OfflineNotificationsPayload(
+						lastNotificationId,
+						totalAmount,
+						notifications.size()
+				)
+		);
+	}
+
+
+	public static void acknowledgeOfflineNotifications(
+			UUID playerUuid,
+			long lastNotificationId
+	) {
+		Long expectedId = awaitingNotificationAck.get(playerUuid);
+
+		if (expectedId == null || expectedId != lastNotificationId) {
+			LOGGER.warn(
+					"Invalid offline notification ACK from {}: {}",
+					playerUuid,
+					lastNotificationId
+			);
+			return;
+		}
+
+		getNotificationRepository().markDeliveredUpTo(
+				playerUuid,
+				lastNotificationId
+		);
+
+		awaitingNotificationAck.remove(playerUuid);
+
+		LOGGER.debug(
+				"Offline notifications acknowledged for {}",
+				playerUuid
+		);
+	}
+
+
 }

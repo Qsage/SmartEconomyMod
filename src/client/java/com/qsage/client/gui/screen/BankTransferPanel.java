@@ -158,8 +158,10 @@ public final class BankTransferPanel {
 
         if (ClientBankNetworking.transfer(recipient.uuid(), amount)) {
             EconomyNotifications.info(
-                    Component.literal("Банк"),
-                    Component.literal("Запрос перевода отправлен")
+                    Component.translatable("gui.smart_economy.bank.title"),
+                    Component.translatable("gui.smart_economy.notification.transfer_sent",
+                            recipient.name())
+
             );
 
             screen.closeBankTransfer();
