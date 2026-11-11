@@ -9,6 +9,8 @@ import com.qsage.client.gui.component.toasts.EconomyNotifications;
 import com.qsage.client.gui.component.toasts.EconomyToast;
 import com.qsage.client.gui.screen.EconomyScreen;
 import com.qsage.client.market.ClientExchange;
+import com.qsage.client.npc.EconomyNpcRenderer;
+import com.qsage.client.npc.dialogue.NpcDialogueScreen;
 import com.qsage.client.player.ClientBankFavorites;
 import com.qsage.client.player.ClientKnownPlayers;
 import com.qsage.client.player.ClientPlayerSkins;
@@ -19,6 +21,8 @@ import com.qsage.economy.market.network.ExchangeSnapshotPayload;
 import com.qsage.economy.notification.network.EconomyNotificationPayload;
 import com.qsage.economy.notification.network.OfflineNotificationsAckPayload;
 import com.qsage.economy.notification.network.OfflineNotificationsPayload;
+import com.qsage.economy.npc.EconomyNpcRegistry;
+import com.qsage.economy.npc.dialogue.network.NpcDialogueOpenPayload;
 import com.qsage.economy.player.network.KnownPlayersSnapshotPayload;
 import com.qsage.economy.player.network.SkinSyncPayload;
 import com.qsage.economy.transaction.network.TransactionHistorySnapshotPayload;
@@ -28,6 +32,7 @@ import net.fabricmc.api.ClientModInitializer;
 
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.minecraft.network.chat.Component;
 
 public final class SmartEconomyClient
@@ -55,6 +60,45 @@ public final class SmartEconomyClient
 					});
 				}
 		);
+
+		EntityRendererRegistry.register(
+				EconomyNpcRegistry.ECONOMY_NPC,
+				EconomyNpcRenderer::new
+		);
+
+		ClientPlayNetworking.registerGlobalReceiver(
+				NpcDialogueOpenPayload.TYPE,
+				(payload, context) -> {
+
+					context.client().execute(() -> {
+
+						var client = context.client();
+
+						if (client.gui.screen()
+								instanceof NpcDialogueScreen screen
+								&& screen.getNpcId() == payload.npcId()) {
+
+							screen.updateDialogue(
+									payload.message(),
+									payload.showOptions()
+							);
+
+							return;
+						}
+
+						client.gui.setScreen(
+								new NpcDialogueScreen(
+										payload.npcId(),
+										payload.npcName(),
+										payload.message(),
+										payload.showOptions()
+								)
+						);
+					});
+				}
+		);
+
+
 
 		ClientPlayNetworking.registerGlobalReceiver(
 				ExchangeSnapshotPayload.TYPE,

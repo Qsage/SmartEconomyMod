@@ -245,6 +245,19 @@ public final class EconomyDatabase implements AutoCloseable {
                 CREATE INDEX IF NOT EXISTS idx_pending_notifications_player
                 ON pending_notifications(player_uuid, delivered);
             """);
+
+            statement.execute("""
+                    CREATE TABLE IF NOT EXISTS player_quests (
+                        player_uuid TEXT NOT NULL,
+                        quest_id TEXT NOT NULL,
+                        status TEXT NOT NULL,
+                        accepted_at INTEGER NOT NULL,
+                        completed_at INTEGER,
+    
+                        PRIMARY KEY (player_uuid, quest_id)
+            
+            """);
+
         }
     }
 

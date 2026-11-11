@@ -9,6 +9,9 @@ import com.qsage.economy.market.network.ExchangeTradePayload;
 import com.qsage.economy.notification.network.EconomyNotificationPayload;
 import com.qsage.economy.notification.network.OfflineNotificationsAckPayload;
 import com.qsage.economy.notification.network.OfflineNotificationsPayload;
+import com.qsage.economy.npc.dialogue.NpcDialogueService;
+import com.qsage.economy.npc.dialogue.network.NpcDialogueActionPayload;
+import com.qsage.economy.npc.dialogue.network.NpcDialogueOpenPayload;
 import com.qsage.economy.player.KnownPlayer;
 import com.qsage.economy.player.network.*;
 import com.qsage.economy.transaction.Transaction;
@@ -113,6 +116,29 @@ public final class EconomyNetworking {
         PayloadTypeRegistry.clientboundPlay().register(
                 TransactionHistorySnapshotPayload.TYPE,
                 TransactionHistorySnapshotPayload.CODEC
+        );
+
+        PayloadTypeRegistry.clientboundPlay().register(
+                NpcDialogueOpenPayload.TYPE,
+                NpcDialogueOpenPayload.CODEC
+        );
+
+        PayloadTypeRegistry.serverboundPlay().register(
+                NpcDialogueActionPayload.TYPE,
+                NpcDialogueActionPayload.CODEC
+        );
+
+        ServerPlayNetworking.registerGlobalReceiver(
+                NpcDialogueActionPayload.TYPE,
+                (payload, context) -> {
+                    context.server().execute(() -> {
+                        NpcDialogueService.handleAction(
+                                context.player(),
+                                payload.npcId(),
+                                payload.optionId()
+                        );
+                    });
+                }
         );
 
         ServerPlayNetworking.registerGlobalReceiver(

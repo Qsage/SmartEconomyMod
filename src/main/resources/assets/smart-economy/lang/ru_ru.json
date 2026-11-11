@@ -81,5 +81,11 @@
   "gui.smart_economy.history.withdraw": "Списание",
   "gui.smart_economy.history.burn": "Списание средств",
   "gui.smart_economy.history.lock": "Блокировка",
-  "gui.smart_economy.history.unlock": "Разблокировка"
+  "gui.smart_economy.history.unlock": "Разблокировка",
+
+  "quest.smart_economy.oak_log_delivery.title": "Поставка древесины",
+  "quest.smart_economy.oak_log_delivery.description": "Доставьте 64 дубовых бревна.",
+
+  "quest.smart_economy.stone_delivery.title": "Строительные материалы",
+  "quest.smart_economy.stone_delivery.description": "Доставьте 128 блоков камня."
 }

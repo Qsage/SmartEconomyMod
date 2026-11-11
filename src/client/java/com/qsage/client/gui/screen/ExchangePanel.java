@@ -29,7 +29,6 @@ import java.util.stream.Collectors;
 
 import static com.qsage.client.gui.GuiStyle.BALANCE_TEXT_MARGIN_RIGHT;
 
-/** The exchange section of EconomyScreen. This is not a Minecraft Screen. */
 public final class ExchangePanel {
     private static final int ROW_X = 18;
     private static final int ROW_Y = 21;
@@ -211,7 +210,6 @@ public final class ExchangePanel {
     }
 
     private void createCategoryTabs() {
-        // The category icons are items, so no additional atlas icon rendering is needed.
         ExchangeCategory[] categories = ExchangeCategory.values();
         for (int i = 0; i < categories.length; i++) {
             ExchangeCategory category = categories[i];

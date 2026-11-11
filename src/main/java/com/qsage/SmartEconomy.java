@@ -12,9 +12,11 @@ import com.qsage.economy.notification.PendingNotification;
 import com.qsage.economy.notification.SqliteNotificationRepository;
 import com.qsage.economy.notification.network.EconomyNotificationPayload;
 import com.qsage.economy.notification.network.OfflineNotificationsPayload;
+import com.qsage.economy.npc.EconomyNpcRegistry;
 import com.qsage.economy.player.KnownPlayerService;
 import com.qsage.economy.player.skin.PlayerSkinRepository;
 import com.qsage.economy.player.skin.ServerPlayerSkinService;
+import com.qsage.economy.quest.QuestLoader;
 import com.qsage.economy.storage.*;
 
 import com.qsage.network.EconomyNetworking;
@@ -95,11 +97,13 @@ public class SmartEconomy implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		SmartEconomyConfigManager.load();
+		EconomyNpcRegistry.register();
 
 		EconomyNetworking.registerPayloads();
 
 		EconomyCommands.register();
 
+		QuestLoader.load();
 
 		ServerLifecycleEvents.SERVER_STARTED.register(server -> {
 			database = new EconomyDatabase(server);

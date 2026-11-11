@@ -1,0 +1,34 @@
+[
+  {
+    "id": "smart-economy:oak_log_delivery",
+    "title": "quest.smart_economy.oak_log_delivery.title",
+    "description": "quest.smart_economy.oak_log_delivery.description",
+    "objectives": [
+      {
+        "type": "DELIVER_ITEM",
+        "item": "minecraft:oak_log",
+        "amount": 64
+      }
+    ],
+    "rewards": {
+      "money": 500
+    },
+    "repeatable": false
+  },
+  {
+    "id": "smart-economy:stone_delivery",
+    "title": "quest.smart_economy.stone_delivery.title",
+    "description": "quest.smart_economy.stone_delivery.description",
+    "objectives": [
+      {
+        "type": "DELIVER_ITEM",
+        "item": "minecraft:stone",
+        "amount": 128
+      }
+    ],
+    "rewards": {
+      "money": 750
+    },
+    "repeatable": false
+  }
+]
